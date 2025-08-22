@@ -1,14 +1,63 @@
 #!/bin/bash
 
 # ==========================
+# 📝 INTRODUCTION SECTION 📝
+# ==========================
+echo "🌟 Welcome to the Django Project Initialization Script! 🌟"
+echo "This script will guide you through the process of setting up a new Django project."
+echo "Let's get started!"
+echo "🔧 Preparing to initialize your Django project..."<end_of_in
+
+# ==========================
 # 🔮 CONFIGURATION SECTION 🔮
 # ==========================
-PROJECT_NAME="djangoerp"  # Change this to your project name
-GITHUB_USERNAME="bamr87"  # Your GitHub username
-GITHUB_REPO="https://github.com/$GITHUB_USERNAME/$PROJECT_NAME.git"  # GitHub repository URL
-PYTHON_VERSION="python3"  # Change to "python" if using Python 2 (not recommended)
-BRANCH_NAME="main"  # Default branch
-VENV_NAME="venv"  # Virtual environment name
+
+# 1. Try to load configuration from .env file
+if [ -f .env ]; then
+    echo "Loading configuration from .env file..."
+    source .env || { echo "❌ Error: Could not load .env file."; exit 1; }
+fi
+
+# 2. Set hardcoded defaults for any missing variables
+# : ${PROJECT_NAME:="django-magic"}
+# : ${APP_NAME:="magic"}
+: ${GITHUB_USERNAME:="bamr87"}
+GITHUB_REPO="https://github.com/$GITHUB_USERNAME/$PROJECT_NAME.git"
+: ${PYTHON_VERSION:="python3"}
+: ${BRANCH_NAME:="main"}
+: ${VENV_NAME:="venv"}
+
+# 3. Prompt for any variable that is still missing (last resort)
+if [ -z "$PROJECT_NAME" ]; then
+    read -p "Enter project name (default: django-magic): " PROJECT_NAME
+    PROJECT_NAME=${PROJECT_NAME:-django-magic}
+fi
+
+if [ -z "$APP_NAME" ]; then
+    read -p "Enter Django app name (default: magic): " APP_NAME
+    APP_NAME=${APP_NAME:-magic}
+fi
+
+if [ -z "$GITHUB_USERNAME" ]; then
+    read -p "Enter GitHub username (default: bamr87): " GITHUB_USERNAME
+    GITHUB_USERNAME=${GITHUB_USERNAME:-bamr87}
+    GITHUB_REPO="https://github.com/$GITHUB_USERNAME/$PROJECT_NAME.git"
+fi
+
+if [ -z "$PYTHON_VERSION" ]; then
+    read -p "Enter python version (default: python3): " PYTHON_VERSION
+    PYTHON_VERSION=${PYTHON_VERSION:-python3}
+fi
+
+if [ -z "$BRANCH_NAME" ]; then
+    read -p "Enter branch name (default: main): " BRANCH_NAME
+    BRANCH_NAME=${BRANCH_NAME:-main}
+fi
+
+if [ -z "$VENV_NAME" ]; then
+    read -p "Enter virtual environment name (default: venv): " VENV_NAME
+    VENV_NAME=${VENV_NAME:-venv}
+fi
 
 
 # ==========================
@@ -57,7 +106,7 @@ fi
 
 if [ ! -d $PROJECT_NAME ]; then
     echo "🚀 Starting Django project..."
-    django-admin startproject $PROJECT_NAME . || error_exit "Failed to start Django project."
+    django-admin startproject $APP_NAME . || error_exit "Failed to start Django project."
 else
     echo "✅ Django project already exists."
 fi
