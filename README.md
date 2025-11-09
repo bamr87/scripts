@@ -1,6 +1,109 @@
-# 🚀 Comprehensive Project Initialization Wizard
+# �️ IT-Journey Scripts Collection
 
+A comprehensive collection of powerful command-line utilities for project initialization, GitHub repository management, and development workflows.
+
+## 📦 Available Tools
+
+### 🚀 Project Initialization Wizard (`project-init.sh`)
 A powerful, interactive command-line wizard for initializing new software projects with best practices, automated setup, and GitHub integration.
+
+### 🍴 ForkMe - Repository Forking Utility (`forkme.sh`)
+Advanced GitHub repository forking and cloning utility with 10 distinct strategies optimized for analysis, review, testing, and research. [See ForkMe Documentation →](FORKME.md)
+
+### 📁 Rename Directory Utility (`rename-directory.sh`)
+Safely rename directories with optional backup, Docker container management, and git repository integrity checks. Perfect for rebranding projects or reorganizing workspace structures.
+
+---
+
+## 🍴 ForkMe - Quick Overview
+
+ForkMe provides flexible forking and cloning options for GitHub repositories, going beyond simple `git clone`:
+
+### Key Features
+- **10 Forking Strategies**: Full, shallow, sparse, toplevel, structure, filetype, analysis, mirror, bundle, and metadata-only
+- **Intelligent Filtering**: Filter by file types, directory patterns, and custom rules
+- **GitHub Integration**: Automatic fork creation with GitHub CLI
+- **Analysis Tools**: Built-in repository metadata and structure analysis
+- **Optimized for Speed**: Shallow clones and sparse checkouts for large repositories
+
+### Quick Start Examples
+
+```bash
+# Full repository documentation
+./forkme.sh --help
+
+# Quick shallow clone for review
+./forkme.sh --strategy shallow --depth 1 owner/repo
+
+# Extract documentation only
+./forkme.sh --strategy filetype --file-types "md,txt" owner/repo
+
+# Security configuration audit
+./forkme.sh --strategy sparse --sparse-paths "src/,*.config" owner/repo
+
+# Get repository metadata without cloning
+./forkme.sh --analyze-only owner/repo
+```
+
+**→ [Full ForkMe Documentation](FORKME.md)**  
+**→ [Quick Reference Card](FORKME-QUICK-REFERENCE.md)**
+
+---
+
+## � Rename Directory Utility
+
+A safe and reliable tool for renaming directories with intelligent handling of git repositories, Docker containers, and automatic backups.
+
+### Key Features
+- **Pre-flight Checks**: Validates source/target paths, permissions, and dependencies
+- **Docker Integration**: Automatically detects and stops related containers
+- **Git Safety**: Checks repository status and preserves git history
+- **Backup Option**: Optional backup creation before rename operation
+- **Comprehensive Logging**: Detailed status messages and error handling
+- **Universal**: Works with any directory structure
+
+### Quick Start Examples
+
+```bash
+# Basic directory rename
+./rename-directory.sh ~/projects/old-name ~/projects/new-name
+
+# Rename with full paths
+./rename-directory.sh /Users/username/github/posthog /Users/username/github/bashog
+
+# Get help
+./rename-directory.sh --help
+```
+
+### What It Does
+
+1. **Validates Paths**: Ensures source exists and target is available
+2. **Checks Docker**: Finds and offers to stop related containers
+3. **Verifies Git**: Checks repository status and uncommitted changes
+4. **Creates Backup**: Optional full backup before rename (recommended)
+5. **Performs Rename**: Safely moves directory to new location
+6. **Verifies Operation**: Confirms rename success and git integrity
+7. **Provides Guidance**: Lists next steps and important notes
+
+### Safety Features
+
+- Won't overwrite existing directories
+- Checks write permissions before proceeding
+- Preserves git history and configuration
+- Stops related Docker containers to prevent conflicts
+- Warns about uncommitted git changes
+- Verifies successful rename before completion
+
+### Use Cases
+
+- **Rebranding Projects**: Rename project directories when changing names
+- **Workspace Organization**: Restructure your development environment
+- **Repository Migration**: Safely rename cloned repositories
+- **Project Cleanup**: Reorganize project hierarchies
+
+---
+
+## �🚀 Project Initialization Wizard
 
 ## ✨ Features
 
@@ -20,7 +123,7 @@ A powerful, interactive command-line wizard for initializing new software projec
 
 1. Clone or download the scripts:
 ```bash
-git clone https://github.com/your-username/scripts.git
+git clone https://github.com/bamr87/scripts.git
 cd scripts
 ```
 
