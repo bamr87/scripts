@@ -8,7 +8,7 @@ A comprehensive collection of powerful command-line utilities for project initia
 A powerful, interactive command-line wizard for initializing new software projects with best practices, automated setup, and GitHub integration.
 
 ### 🍴 ForkMe - Repository Forking Utility (`forkme.sh`)
-Advanced GitHub repository forking and cloning utility with 10 distinct strategies optimized for analysis, review, testing, and research. [See ForkMe Documentation →](FORKME.md)
+Advanced GitHub repository forking and cloning utility with 10 distinct strategies optimized for analysis, review, testing, and research. [See ForkMe Documentation →](FORKME/FORKME.md)
 
 ### 📁 Rename Directory Utility (`rename-directory.sh`)
 Safely rename directories with optional backup, Docker container management, and git repository integrity checks. Perfect for rebranding projects or reorganizing workspace structures.
@@ -45,8 +45,8 @@ ForkMe provides flexible forking and cloning options for GitHub repositories, go
 ./forkme.sh --analyze-only owner/repo
 ```
 
-**→ [Full ForkMe Documentation](FORKME.md)**  
-**→ [Quick Reference Card](FORKME-QUICK-REFERENCE.md)**
+**→ [Full ForkMe Documentation](FORKME/FORKME.md)**  
+**→ [Quick Reference Card](FORKME/FORKME-QUICK-REFERENCE.md)**
 
 ---
 
