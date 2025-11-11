@@ -1,3 +1,10 @@
+# scripts directory
+
+This directory contains project scripts used for automation and development tasks. It is intentionally tracked in the repository so collaborators can run and maintain these utilities.
+
+Rules:
+- `*.sh`, `*.py`, and `*.zsh` scripts in this folder should be executable and useful.
+- If a script generates files in-tree, consider adding generated files to `.gitignore` rather than keeping them in this folder.
 # �️ IT-Journey Scripts Collection
 
 A comprehensive collection of powerful command-line utilities for project initialization, GitHub repository management, and development workflows.
