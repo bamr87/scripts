@@ -409,3 +409,36 @@ For issues, questions, or suggestions:
 **Happy Coding! 🎉**
 
 *Built with ❤️ by the developer community*
+
+## 🔧 Git Init Utility (`git_init.sh`)
+
+The `git_init.sh` script was upgraded to support both interactive and headless modes with improved scaffolding. It uses programmatic template builders where possible (eg. GitHub CLI / degit) rather than storing static template files.
+
+Quick examples:
+
+```bash
+# Interactive
+./git_init.sh
+
+# Headless: create repo with Python scaffold and .gitignore
+./git_init.sh --headless -n myrepo -u myuser -d "My new project" --gitignore python,macos --scaffold python
+
+# Use a GitHub template repo (requires gh or npx degit)
+./git_init.sh --headless -n myrepo -u myuser -t octocat/template-repo
+
+# Create local repo and do not push
+./git_init.sh --headless -n localrepo --no-push
+
+# Preview mode
+Use `--dry-run` to preview the actions the script would perform without making changes:
+
+```bash
+# Shows created directories, commands, and intended remote actions
+./git_init.sh --headless -n previewme --dry-run
+```
+```
+
+Notes:
+- `gh` is preferred for repo creation and using GitHub templates.
+- If `gh` is not available, but `npx degit` is installed, the script will download templates with degit.
+- `.gitignore` is programmatically created using the gitignore.io API (requires curl).

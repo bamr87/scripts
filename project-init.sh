@@ -1,12 +1,44 @@
 #!/bin/bash
+"""
+File: project-init.sh
+Description: Comprehensive project initialization wizard for multi-stack projects with interactive and non-interactive modes
+Author: Amr Abdel-Motaleb <amr.abdel@gmail.com>
+Created: 2025-11-13
+Last Modified: 2025-11-13
+Version: 2.0.0
 
-# ==============================================================================
-# 🚀 COMPREHENSIVE PROJECT INITIALIZATION WIZARD
-# ==============================================================================
-# Description: Universal project initialization script with interactive wizard
-# Author: Project Wizard
-# Version: 2.0.0
-# ==============================================================================
+Dependencies:
+- git: repository initialization and GitHub integration
+- bash 4+: arrays, extended test, and heredoc usage
+- curl (optional): license template downloads
+- python3 (optional): Django/Python project bootstrapping
+- node/npm (optional): React/Node project bootstrapping
+- gh (optional): programmatic GitHub repository creation
+
+Container Requirements:
+- Base Image: linux/amd64 with git, bash, curl and language runtimes for selected PROJECT_TYPE
+- Volumes:
+    - /workspace (recommended) mounted to host project root
+    - $HOME/.project-wizard for persisted config and logs
+- Environment:
+    - GITHUB_USERNAME / GITHUB_EMAIL for non-interactive Git setup (optional)
+
+Usage:
+    Interactive (recommended):
+        ./project-init.sh
+
+    Non-interactive (CI/headless):
+        PROJECT_TYPE=django PROJECT_NAME=myapp GITHUB_USERNAME=me \
+            ./project-init.sh --non-interactive
+
+    With explicit flags:
+        ./project-init.sh --type react --name my-react-app --dir "$HOME/github/my-react-app"
+
+Design Notes:
+- Implements Design for Failure (DFF) via set -euo pipefail and centralized logging
+- Encourages DRY by delegating stack-specific setup to helper functions and modules
+- Keeps it Simple (KIS) by preferring sensible defaults with optional overrides
+"""
 
 set -euo pipefail  # Exit on error, undefined variables, and pipe failures
 
