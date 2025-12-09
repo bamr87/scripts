@@ -1,6 +1,6 @@
 # ForkMe Quick Reference Card
 
-## 🚀 Quick Start
+## 🚀 Command Format
 
 ```bash
 ./forkme.sh [options] <repo-url>
@@ -118,7 +118,7 @@
 | **Infrastructure** | `tf,hcl,dockerfile,yml` |
 | **Scripts** | `sh,bash,zsh,py,rb` |
 
-## 🐛 Troubleshooting
+## 🐛 Quick Troubleshooting
 
 | Issue | Solution |
 |-------|----------|
@@ -127,58 +127,56 @@
 | Permission denied | Use HTTPS URL |
 | Slow clone | Use `--strategy shallow --depth 1` |
 | Sparse paths fail | Check path format (no leading `/`) |
+| Target exists | Remove it or use `--target` option |
 
-## 📚 Examples by Scenario
+## 📖 Repository URL Formats
 
-### Security Review
 ```bash
-./forkme.sh --strategy analysis \
-  --sparse-paths "src/,*.config,Dockerfile" \
-  --exclude "node_modules/,*.min.js" \
-  owner/repo
+# Full URL
+./forkme.sh https://github.com/owner/repo
+
+# SSH URL
+./forkme.sh git@github.com:owner/repo.git
+
+# Short form
+./forkme.sh owner/repo
 ```
 
-### Quick Testing
+## 🔍 Common Workflows
+
+### Security Review Workflow
 ```bash
-./forkme.sh --strategy shallow \
-  --depth 1 \
-  --branch main \
-  --no-fork \
-  owner/repo
+# Step 1: Get metadata
+./forkme.sh --analyze-only vendor/library
+
+# Step 2: Review configs
+./forkme.sh --strategy sparse --sparse-paths "*.yml,*.json,Dockerfile" --no-fork vendor/library
+
+# Step 3: Review source
+./forkme.sh --strategy sparse --sparse-paths "src/,lib/" vendor/library
 ```
 
-### Documentation Site
+### Contribution Workflow
 ```bash
-./forkme.sh --strategy sparse \
-  --sparse-paths "docs/,README.md,*.md" \
-  owner/repo
+# Step 1: Check project
+./forkme.sh --analyze-only owner/project
+
+# Step 2: Get structure
+./forkme.sh --strategy structure owner/project
+
+# Step 3: Fork and clone
+./forkme.sh --strategy full owner/project
 ```
 
-### Configuration Audit
+### Documentation Extraction
 ```bash
-./forkme.sh --strategy filetype \
-  --file-types "yml,yaml,json,env" \
-  owner/repo
+# Get all docs
+./forkme.sh --strategy filetype --file-types "md,txt,rst" --no-fork owner/repo
+
+# Get specific docs
+./forkme.sh --strategy sparse --sparse-paths "docs/,README.md" --no-fork owner/repo
 ```
-
-### Offline Bundle
-```bash
-./forkme.sh --strategy bundle owner/repo
-# Creates: forkme-workspace/repo.bundle
-```
-
-### Structure Analysis
-```bash
-./forkme.sh --strategy structure --analyze owner/repo
-```
-
-## 🔗 Quick Links
-
-- Full Documentation: `FORKME.md`
-- Help: `./forkme.sh --help`
-- GitHub: https://github.com/bamr87/scripts
-- IT-Journey: https://github.com/bamr87/it-journey
 
 ---
 
-**Print this card and keep handy!**
+**For complete documentation, see [FORKME.md](FORKME.md)**

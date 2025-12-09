@@ -6,8 +6,8 @@
 #              multiple strategies for analysis, review, testing, and research
 # Author: IT-Journey Scripts Team
 # Created: 2025-11-01
-# Last Modified: 2025-11-01
-# Version: 1.0.0
+# Last Modified: 2025-11-16
+# Version: 1.0.1
 #
 # Dependencies:
 # - gh (GitHub CLI)
@@ -21,6 +21,20 @@
 
 set -euo pipefail
 
+# Cleanup on exit
+TEMP_DIRS=()
+cleanup() {
+    if [[ ${#TEMP_DIRS[@]} -gt 0 ]]; then
+        log_debug "Cleaning up temporary directories..."
+        for dir in "${TEMP_DIRS[@]}"; do
+            if [[ -d "$dir" ]]; then
+                rm -rf "$dir"
+            fi
+        done
+    fi
+}
+trap cleanup EXIT INT TERM
+
 # Color codes for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -29,6 +43,9 @@ BLUE='\033[0;34m'
 MAGENTA='\033[0;35m'
 CYAN='\033[0;36m'
 NC='\033[0m' # No Color
+
+# Script version
+VERSION="1.0.1"
 
 # Default configuration
 FORK_STRATEGY="full"
@@ -129,6 +146,7 @@ ${YELLOW}ANALYSIS OPTIONS:${NC}
 ${YELLOW}CONTROL OPTIONS:${NC}
     ${CYAN}--dry-run${NC}           - Show what would be done without executing
     ${CYAN}--verbose${NC}           - Enable verbose output
+    ${CYAN}--version${NC}           - Display version information
     ${CYAN}--help${NC}              - Display this help message
 
 ${YELLOW}EXAMPLES:${NC}
@@ -217,6 +235,47 @@ check_dependencies() {
     if [[ "$CREATE_FORK" == true ]] && ! gh auth status &> /dev/null; then
         log_error "GitHub CLI not authenticated"
         echo "Run: gh auth login"
+        exit 1
+    fi
+}
+
+###############################################################################
+# Input Validation Functions
+###############################################################################
+
+validate_sparse_paths() {
+    for path in "${SPARSE_PATHS[@]}"; do
+        # Check for leading slash (invalid)
+        if [[ "$path" =~ ^/ ]]; then
+            log_error "Invalid sparse path: $path (paths should not start with /)"
+            exit 1
+        fi
+        # Warn about potentially problematic patterns
+        if [[ "$path" =~ \.\. ]]; then
+            log_warning "Sparse path contains '..': $path (may cause issues)"
+        fi
+    done
+}
+
+validate_file_types() {
+    for ext in "${FILE_TYPES[@]}"; do
+        # Remove leading dots if present
+        ext="${ext#.}"
+        # Check for invalid characters
+        if [[ "$ext" =~ [^a-zA-Z0-9_-] ]]; then
+            log_error "Invalid file extension: $ext (use alphanumeric, underscore, or hyphen only)"
+            exit 1
+        fi
+    done
+}
+
+validate_target_dir() {
+    local target="$1"
+    
+    # Check if target already exists
+    if [[ -e "$target" ]] && [[ "$DRY_RUN" == false ]]; then
+        log_error "Target directory already exists: $target"
+        log_info "Please remove it or choose a different target with --target option"
         exit 1
     fi
 }
@@ -353,16 +412,31 @@ strategy_full() {
     if [[ "$CREATE_FORK" == true ]]; then
         log_info "Creating fork on GitHub..."
         if [[ "$DRY_RUN" == false ]]; then
-            gh repo fork "$repo" --clone=false
-            local forked_repo
-            forked_repo=$(gh api user | jq -r '.login')
-            repo="$forked_repo/$(echo "$repo" | cut -d'/' -f2)"
+            # Check if fork already exists
+            local username
+            username=$(gh api user | jq -r '.login')
+            local repo_name=$(echo "$repo" | cut -d'/' -f2)
+            
+            if gh repo view "$username/$repo_name" &> /dev/null; then
+                log_warning "Fork already exists: $username/$repo_name"
+                repo="$username/$repo_name"
+            else
+                if gh repo fork "$repo" --clone=false; then
+                    repo="$username/$repo_name"
+                    log_success "Fork created: $repo"
+                else
+                    log_error "Failed to create fork, will clone original repository"
+                fi
+            fi
         fi
     fi
     
     log_info "Cloning repository with full history..."
     if [[ "$DRY_RUN" == false ]]; then
-        git clone "https://github.com/${repo}.git" "$target_dir"
+        if ! git clone "https://github.com/${repo}.git" "$target_dir"; then
+            log_error "Failed to clone repository"
+            exit 1
+        fi
     else
         log_info "[DRY RUN] Would clone: https://github.com/${repo}.git to $target_dir"
     fi
@@ -378,10 +452,15 @@ strategy_shallow() {
     local branch_arg=""
     if [[ -n "$BRANCH" ]]; then
         branch_arg="--branch $BRANCH --single-branch"
+        log_info "Cloning branch: $BRANCH"
     fi
     
     if [[ "$DRY_RUN" == false ]]; then
-        git clone --depth "$depth" $branch_arg "https://github.com/${repo}.git" "$target_dir"
+        if ! git clone --depth "$depth" $branch_arg "https://github.com/${repo}.git" "$target_dir"; then
+            log_error "Failed to perform shallow clone"
+            exit 1
+        fi
+        log_success "Shallow clone completed (depth: $depth)"
     else
         log_info "[DRY RUN] Would shallow clone (depth $depth): https://github.com/${repo}.git"
     fi
@@ -399,14 +478,27 @@ strategy_sparse() {
     fi
     
     if [[ "$DRY_RUN" == false ]]; then
-        git clone --filter=blob:none --sparse "https://github.com/${repo}.git" "$target_dir"
+        if ! git clone --filter=blob:none --sparse "https://github.com/${repo}.git" "$target_dir"; then
+            log_error "Failed to perform sparse clone"
+            exit 1
+        fi
+        
         cd "$target_dir"
-        git sparse-checkout init --cone
+        if ! git sparse-checkout init --cone; then
+            log_error "Failed to initialize sparse checkout"
+            cd - > /dev/null
+            exit 1
+        fi
+        
         for path in "${SPARSE_PATHS[@]}"; do
-            log_debug "Adding sparse path: $path"
-            git sparse-checkout add "$path"
+            log_info "Adding sparse path: $path"
+            if ! git sparse-checkout add "$path"; then
+                log_warning "Failed to add sparse path: $path (path may not exist)"
+            fi
         done
         cd - > /dev/null
+        
+        log_success "Sparse checkout completed for paths: ${SPARSE_PATHS[*]}"
     else
         log_info "[DRY RUN] Would sparse checkout paths: ${SPARSE_PATHS[*]}"
     fi
@@ -456,23 +548,27 @@ strategy_filetype() {
     if [[ "$DRY_RUN" == false ]]; then
         git clone --depth 1 "https://github.com/${repo}.git" "$target_dir"
         
-        # Build find command to keep only specified file types
-        local find_cmd="find \"$target_dir\" -type f ! -path \"*/.git/*\""
+        # Build find command to DELETE files NOT matching specified types
+        # We need to find files that don't match ANY of the specified extensions
+        local find_cmd="find \"$target_dir\" -type f ! -path \"*/.git/*\" \\( "
         local first=true
         for ext in "${FILE_TYPES[@]}"; do
             if [[ "$first" == true ]]; then
-                find_cmd+=" ! -name \"*.$ext\""
+                find_cmd+="! -name \"*.$ext\""
                 first=false
             else
-                find_cmd+=" ! -name \"*.$ext\""
+                find_cmd+=" -a ! -name \"*.$ext\""
             fi
         done
-        find_cmd+=" -delete"
+        find_cmd+=" \\) -delete"
         
+        log_debug "Executing: $find_cmd"
         eval "$find_cmd"
         
         # Remove empty directories
         find "$target_dir" -type d -empty ! -path "*/.git/*" -delete
+        
+        log_success "Filtered repository to file types: ${FILE_TYPES[*]}"
     else
         log_info "[DRY RUN] Would filter for file types: ${FILE_TYPES[*]}"
     fi
@@ -532,11 +628,26 @@ strategy_bundle() {
     
     if [[ "$DRY_RUN" == false ]]; then
         local temp_clone="${target_dir}_temp"
-        git clone "https://github.com/${repo}.git" "$temp_clone"
+        TEMP_DIRS+=("$temp_clone")
+        
+        if ! git clone "https://github.com/${repo}.git" "$temp_clone"; then
+            log_error "Failed to clone repository for bundling"
+            exit 1
+        fi
+        
         cd "$temp_clone"
-        git bundle create "$bundle_file" --all
+        if ! git bundle create "$bundle_file" --all; then
+            log_error "Failed to create bundle"
+            cd - > /dev/null
+            exit 1
+        fi
         cd - > /dev/null
-        rm -rf "$temp_clone"
+        
+        # Move bundle to parent directory
+        if [[ -f "$temp_clone/$bundle_file" ]]; then
+            mv "$temp_clone/$bundle_file" "$bundle_file"
+        fi
+        
         log_success "Bundle created: $bundle_file"
     else
         log_info "[DRY RUN] Would create git bundle: $bundle_file"
@@ -563,6 +674,15 @@ execute_fork() {
     log_info "Repository: $repo"
     log_info "Strategy: $FORK_STRATEGY"
     
+    # Validate inputs
+    if [[ ${#SPARSE_PATHS[@]} -gt 0 ]]; then
+        validate_sparse_paths
+    fi
+    
+    if [[ ${#FILE_TYPES[@]} -gt 0 ]]; then
+        validate_file_types
+    fi
+    
     # Create working directory
     if [[ "$DRY_RUN" == false ]] && [[ ! -d "$WORK_DIR" ]]; then
         mkdir -p "$WORK_DIR"
@@ -575,6 +695,9 @@ execute_fork() {
     fi
     
     log_debug "Target directory: $TARGET_DIR"
+    
+    # Validate target directory
+    validate_target_dir "$TARGET_DIR"
     
     # Execute strategy
     case "$FORK_STRATEGY" in
@@ -708,6 +831,10 @@ parse_arguments() {
                 ;;
             --help|-h)
                 show_usage
+                exit 0
+                ;;
+            --version|-v)
+                echo "ForkMe version $VERSION"
                 exit 0
                 ;;
             -*)

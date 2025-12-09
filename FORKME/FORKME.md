@@ -1,9 +1,9 @@
 # ForkMe - Advanced GitHub Repository Forking Utility
 
-**Version:** 1.0.0  
+**Version:** 1.0.1  
 **Author:** IT-Journey Scripts Team  
 **License:** MIT  
-**Repository:** bamr87/FORKME
+**Repository:** bamr87/it-journey (scripts/FORKME)
 
 ---
 
@@ -96,15 +96,18 @@ Follow the interactive prompts to complete authentication.
 ### Install ForkMe Script
 
 ```bash
-# Clone the FORKME repository
+# Clone the IT-Journey repository
 cd ~/github
-git clone https://github.com/bamr87/FORKME.git
+git clone https://github.com/bamr87/it-journey.git
+
+# Navigate to FORKME scripts
+cd it-journey/scripts/FORKME
 
 # Make forkme.sh executable
-chmod +x FORKME/forkme.sh
+chmod +x forkme.sh
 
 # Optional: Add to PATH
-echo 'export PATH="$HOME/github/FORKME:$PATH"' >> ~/.zshrc
+echo 'export PATH="$HOME/github/it-journey/scripts/FORKME:$PATH"' >> ~/.zshrc
 source ~/.zshrc
 ```
 
@@ -1295,15 +1298,18 @@ Strategies:             10 unique approaches
 ### 🚀 Quick Installation
 
 ```bash
-# Clone FORKME repository
+# Clone IT-Journey repository
 cd ~/github
-git clone https://github.com/bamr87/FORKME.git
+git clone https://github.com/bamr87/it-journey.git
+
+# Navigate to FORKME
+cd it-journey/scripts/FORKME
 
 # Make executable
-chmod +x FORKME/forkme.sh
+chmod +x forkme.sh
 
 # Add to PATH (optional)
-echo 'export PATH="$HOME/github/FORKME:$PATH"' >> ~/.zshrc
+echo 'export PATH="$HOME/github/it-journey/scripts/FORKME:$PATH"' >> ~/.zshrc
 source ~/.zshrc
 ```
 

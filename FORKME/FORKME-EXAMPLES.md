@@ -5,7 +5,7 @@ This document provides practical, real-world examples of using ForkMe for variou
 ## 📚 Table of Contents
 
 1. [Security Auditing](#security-auditing)
-2. [Open Source Contribution Prep](#open-source-contribution-prep)
+2. [Open Source Contribution](#open-source-contribution)
 3. [Documentation Projects](#documentation-projects)
 4. [Code Learning & Research](#code-learning--research)
 5. [CI/CD Pipeline Testing](#cicd-pipeline-testing)
@@ -34,8 +34,6 @@ You want to audit a third-party library before adding it to your project.
 # Step 3: Examine source code (excluding tests and docs)
 ./forkme.sh --strategy sparse \
     --sparse-paths "src/,lib/" \
-    --exclude "tests/,docs/,examples/" \
-    --no-fork \
     vendor/library-name
 ```
 
@@ -54,19 +52,15 @@ repos=(
 for repo in "${repos[@]}"; do
     echo "Auditing: $repo"
     
-    # Clone security-sensitive files only
     ./forkme.sh --strategy analysis \
-        --sparse-paths "src/,config/,*.env.example,Dockerfile,docker-compose.yml" \
-        --exclude "node_modules/,dist/,build/" \
+        --sparse-paths "src/,*.config,Dockerfile" \
         --no-fork \
         --target "./audit/$(basename $repo)" \
         "$repo"
     
-    # Run security scanner (example with npm audit)
+    # Run security tools
     cd "./audit/$(basename $repo)"
-    if [ -f "package.json" ]; then
-        npm audit --json > ../security-report-$(basename $repo).json
-    fi
+    # npm audit, bandit, safety, etc.
     cd -
 done
 
@@ -87,7 +81,7 @@ cd forkme-workspace/repo
 # Use gitleaks or similar tool
 docker run -v $(pwd):/path zricethezav/gitleaks:latest detect \
     --source="/path" \
-    --report-format="json" \
+    --verbose \
     --report-path="/path/gitleaks-report.json"
 
 cd -
@@ -95,26 +89,26 @@ cd -
 
 ---
 
-## Open Source Contribution Prep
+## Open Source Contribution
 
 ### Scenario 1: Exploring a New Project Before Contributing
 
 ```bash
 # Step 1: Quick metadata check
-./forkme.sh --analyze-only torvalds/linux
+./forkme.sh --analyze-only microsoft/vscode
 
 # Step 2: Get project structure without downloading everything
-./forkme.sh --strategy structure torvalds/linux
+./forkme.sh --strategy structure microsoft/vscode
 
 # Step 3: Review contributing guidelines and docs
 ./forkme.sh --strategy sparse \
     --sparse-paths "CONTRIBUTING.md,CODE_OF_CONDUCT.md,docs/,README.md" \
-    torvalds/linux
+    microsoft/vscode
 
 # Step 4: If interested, get specific subsystem
 ./forkme.sh --strategy sparse \
-    --sparse-paths "drivers/gpu/,Documentation/gpu/" \
-    torvalds/linux
+    --sparse-paths "src/vs/editor/,docs/editor/" \
+    microsoft/vscode
 ```
 
 ### Scenario 2: Understanding Code Before Issue Fix
@@ -125,7 +119,7 @@ cd -
 # Get recent history with relevant code
 ./forkme.sh --strategy shallow \
     --depth 20 \
-    --sparse-paths "src/module-with-bug/,tests/module-with-bug/" \
+    --branch main \
     owner/project
 
 # Review tests to understand expected behavior
@@ -144,10 +138,10 @@ grep -r "test.*bug_related_functionality" tests/
 ./forkme.sh --strategy filetype \
     --file-types "md,txt,rst,adoc,pdf" \
     --no-fork \
-    microsoft/vscode-docs
+    kubernetes/website
 
 # Result: Only documentation files in workspace
-cd forkme-workspace/vscode-docs
+cd forkme-workspace/website
 tree  # View documentation structure
 ```
 
@@ -173,7 +167,7 @@ cd forkme-workspace/website
 
 repos=(
     "facebook/react"
-    "vuejs/core"
+    "vuejs/vue"
     "angular/angular"
 )
 
@@ -183,9 +177,9 @@ for repo in "${repos[@]}"; do
     framework=$(basename $repo)
     
     ./forkme.sh --strategy filetype \
-        --file-types "md,mdx" \
-        --no-fork \
+        --file-types "md,txt,rst" \
         --target "./framework-docs/$framework" \
+        --no-fork \
         "$repo"
 done
 
@@ -220,14 +214,14 @@ grep -r "function\*" .  # Generator patterns
 ./forkme.sh --strategy filetype \
     --file-types "rs,toml" \
     --no-fork \
-    --target ./rust-learning/tokio \
+    --depth 20 \
     tokio-rs/tokio
 
 # Learning Python patterns
 ./forkme.sh --strategy sparse \
     --sparse-paths "src/,*.py" \
-    --exclude "tests/,docs/" \
     --no-fork \
+    --depth 10 \
     psf/requests
 ```
 
@@ -248,18 +242,15 @@ mkdir -p ./framework-comparison
 for framework in "${frameworks[@]}"; do
     name=$(basename $framework)
     
-    # Get only source code
-    ./forkme.sh --strategy sparse \
-        --sparse-paths "lib/,src/,index.js" \
-        --no-fork \
+    ./forkme.sh --strategy filetype \
+        --file-types "js,json" \
         --target "./framework-comparison/$name" \
+        --no-fork \
         "$framework"
     
-    # Analyze complexity
+    # Generate statistics
     cd "./framework-comparison/$name"
-    echo "=== $name ===" >> ../metrics.txt
-    echo "Files: $(find . -name '*.js' | wc -l)" >> ../metrics.txt
-    echo "Lines: $(find . -name '*.js' -exec cat {} \; | wc -l)" >> ../metrics.txt
+    cloc . > "../${name}-stats.txt"
     cd -
 done
 ```
@@ -284,24 +275,14 @@ cd forkme-workspace/checkout/.github/workflows
 
 ### Scenario 2: Quick Clone for CI Testing
 
-```bash
+```yaml
 # In your CI pipeline (.github/workflows/test.yml)
 
 - name: Clone repository for testing
   run: |
-    curl -fsSL https://raw.githubusercontent.com/bamr87/scripts/main/forkme.sh -o forkme.sh
+    curl -O https://raw.githubusercontent.com/bamr87/it-journey/main/scripts/FORKME/forkme.sh
     chmod +x forkme.sh
-    
-    # Fast shallow clone
-    ./forkme.sh --strategy shallow \
-      --depth 1 \
-      --no-fork \
-      --target ./test-repo \
-      ${{ github.repository }}
-    
-    # Run tests
-    cd test-repo
-    npm test
+    ./forkme.sh --strategy shallow --depth 1 --no-fork ${{ github.repository }}
 ```
 
 ---
@@ -420,14 +401,14 @@ mkdir -p org-audit
 for repo in $repos; do
     echo "Processing: $repo"
     
-    # Get metadata
-    ./forkme.sh --analyze-only "$repo" > "org-audit/${repo//\//-}-metadata.txt"
-    
-    # Get structure for analysis
-    ./forkme.sh --strategy structure \
+    ./forkme.sh --strategy analysis \
+        --sparse-paths "package.json,requirements.txt,go.mod" \
+        --target "./org-audit/$(basename $repo)" \
         --no-fork \
-        --target "org-audit/${repo//\//-}" \
-        "$repo" 2>/dev/null || echo "Failed: $repo"
+        "$repo"
+    
+    # Extract dependency info
+    # Run security scans
 done
 
 echo "Audit complete in ./org-audit/"
@@ -450,18 +431,16 @@ echo "Repository,Node Version,React Version" > survey.csv
 for repo in "${repos[@]}"; do
     ./forkme.sh --strategy sparse \
         --sparse-paths "package.json" \
-        --no-fork \
         --target "./temp-$(basename $repo)" \
+        --no-fork \
         "$repo"
     
     cd "./temp-$(basename $repo)"
-    
-    node_version=$(jq -r '.engines.node // "unknown"' package.json)
-    react_version=$(jq -r '.dependencies.react // "none"' package.json)
-    
+    node_version=$(jq -r '.engines.node // "N/A"' package.json)
+    react_version=$(jq -r '.dependencies.react // "N/A"' package.json)
     echo "$repo,$node_version,$react_version" >> ../survey.csv
+    cd ..
     
-    cd -
     rm -rf "./temp-$(basename $repo)"
 done
 
@@ -472,140 +451,83 @@ echo "Survey complete: survey.csv"
 
 ```bash
 #!/bin/bash
-# create-offline-archive.sh
+# create-archive.sh
 
 repos=(
-    "critical/app-1"
-    "critical/app-2"
-    "critical/database-schemas"
+    "critical/repo1"
+    "critical/repo2"
+    "critical/repo3"
 )
 
-archive_dir="./offline-archive-$(date +%Y%m%d)"
-mkdir -p "$archive_dir"
+mkdir -p archive
 
 for repo in "${repos[@]}"; do
-    echo "Archiving: $repo"
-    
-    # Create git bundle for complete offline access
     ./forkme.sh --strategy bundle \
-        --target "$archive_dir/$(basename $repo)" \
+        --target "./archive/$(basename $repo)" \
+        --no-fork \
         "$repo"
 done
 
-# Create archive
-tar -czf "offline-archive-$(date +%Y%m%d).tar.gz" "$archive_dir"
-
-echo "Offline archive created: offline-archive-$(date +%Y%m%d).tar.gz"
+# Create compressed archive
+tar -czf critical-repos-backup.tar.gz archive/
+echo "Archive created: critical-repos-backup.tar.gz"
 ```
 
 ---
 
-## Advanced Workflows
+## Advanced Patterns
 
-### Combining with Other Tools
-
-#### With ripgrep for Code Search
+### Pattern 1: Two-Stage Security Review
 
 ```bash
-# Clone and search for specific patterns
+# Stage 1: Metadata and structure (no code download)
+./forkme.sh --analyze-only suspicious/repo
+./forkme.sh --strategy structure --no-fork suspicious/repo
+
+# Stage 2: If safe, get specific files
+./forkme.sh --strategy sparse \
+    --sparse-paths "src/,package.json" \
+    --no-fork \
+    suspicious/repo
+```
+
+### Pattern 2: Progressive Download
+
+```bash
+# Level 1: Top-level files only
+./forkme.sh --strategy toplevel --no-fork owner/large-repo
+
+# Level 2: Add specific directories
+./forkme.sh --strategy sparse \
+    --sparse-paths "src/core/,docs/" \
+    --no-fork \
+    owner/large-repo
+
+# Level 3: Full clone if needed
+./forkme.sh --strategy full owner/large-repo
+```
+
+### Pattern 3: Multi-Format Analysis
+
+```bash
+# Get structure
+./forkme.sh --strategy structure --target ./project-structure owner/repo
+
+# Get docs
 ./forkme.sh --strategy filetype \
-    --file-types "js,ts" \
+    --file-types "md,txt" \
+    --target ./project-docs \
     --no-fork \
-    facebook/react
-
-cd forkme-workspace/react
-rg "useState|useEffect" --stats
-```
-
-#### With git-sizer for Repository Analysis
-
-```bash
-# Analyze repository size and complexity
-./forkme.sh --strategy full \
-    --no-fork \
-    large/repository
-
-cd forkme-workspace/repository
-git-sizer --verbose
-```
-
-#### With CodeQL for Security Analysis
-
-```bash
-# Clone and run CodeQL analysis
-./forkme.sh --strategy shallow \
-    --depth 1 \
-    --no-fork \
-    target/project
-
-cd forkme-workspace/project
-codeql database create codeql-db --language=javascript
-codeql database analyze codeql-db --format=sarif-latest --output=results.sarif
-```
-
----
-
-## Tips for Efficient Usage
-
-1. **Always start with metadata** for unknown repositories:
-   ```bash
-   ./forkme.sh --analyze-only unknown/repo
-   ```
-
-2. **Use dry-run** for complex operations:
-   ```bash
-   ./forkme.sh --dry-run --verbose --strategy sparse owner/repo
-   ```
-
-3. **Combine strategies** for efficiency:
-   ```bash
-   # Fast analysis with specific focus
-   ./forkme.sh --strategy analysis --sparse-paths "src/" --depth 1
-   ```
-
-4. **Clean up regularly**:
-   ```bash
-   rm -rf forkme-workspace/
-   ```
-
-5. **Script repetitive tasks** - see batch processing examples above
-
----
-
-## Troubleshooting Real-World Issues
-
-### Issue: Repository Too Large
-
-```bash
-# Solution: Use analysis strategy with specific paths
-./forkme.sh --strategy analysis \
-    --sparse-paths "path/to/relevant/code" \
-    --depth 1 \
-    huge/repository
-```
-
-### Issue: Need Specific Historical Context
-
-```bash
-# Solution: Increase depth for more commits
-./forkme.sh --strategy shallow \
-    --depth 50 \
-    --branch main \
     owner/repo
-```
 
-### Issue: Multiple File Types Needed
-
-```bash
-# Solution: Combine file types
+# Get code
 ./forkme.sh --strategy filetype \
-    --file-types "py,js,yaml,json,md" \
+    --file-types "py,js" \
+    --target ./project-code \
+    --no-fork \
     owner/repo
 ```
 
 ---
 
-**For more examples and scenarios, see:**
-- [Full ForkMe Documentation](FORKME.md)
-- [Quick Reference Card](FORKME-QUICK-REFERENCE.md)
-- [GitHub Issues for Community Examples](https://github.com/bamr87/scripts/issues)
+**For more information, see [FORKME.md](FORKME.md)**
