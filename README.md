@@ -17,7 +17,10 @@ A powerful, interactive command-line wizard for initializing new software projec
 ### 🍴 ForkMe - Repository Forking Utility (`forkme.sh`)
 Advanced GitHub repository forking and cloning utility with 10 distinct strategies optimized for analysis, review, testing, and research. [See ForkMe Documentation →](FORKME/FORKME.md)
 
-### 📁 Rename Directory Utility (`rename-directory.sh`)
+### � StashMe - Multi-Repository Cloud Stash (`stashme.sh`)
+Save uncommitted changes across multiple git repositories to remote backup branches. Perfect for saving all your open work to the cloud before vacations, machine migrations, or emergency backups. [See StashMe Documentation →](STASHME/STASHME.md)
+
+### �📁 Rename Directory Utility (`rename-directory.sh`)
 Safely rename directories with optional backup, Docker container management, and git repository integrity checks. Perfect for rebranding projects or reorganizing workspace structures.
 
 ---
@@ -57,7 +60,61 @@ ForkMe provides flexible forking and cloning options for GitHub repositories, go
 
 ---
 
-## � Rename Directory Utility
+## 💾 StashMe - Quick Overview
+
+StashMe saves uncommitted changes across multiple git repositories to remote backup branches. It's your safety net for open work across all your projects.
+
+### Key Features
+- **Multi-Repo Support**: Process all git repositories under a directory tree
+- **Cloud Backup**: Pushes changes to remote backup branches on GitHub
+- **Safe by Default**: Creates new branches, never modifies your working branch
+- **Timestamped Branches**: Automatic naming like `stashme/2026-02-03-143021`
+- **Restore Mode**: Easily recover stashed changes later
+- **Cleanup Mode**: Remove old stashme branches when done
+- **Interactive Mode**: Confirm actions for each repository
+
+### Quick Start Examples
+
+```bash
+# Stash all repos in ~/github (default)
+./stashme.sh
+
+# Stash repos in a specific directory
+./stashme.sh ~/projects
+
+# List repos with uncommitted changes
+./stashme.sh --list
+
+# Preview what would happen
+./stashme.sh --dry-run
+
+# Before vacation with custom message
+./stashme.sh -m "WIP: saving before vacation"
+
+# Restore previously stashed changes
+./stashme.sh --restore
+
+# Clean up old stashme branches
+./stashme.sh --cleanup
+```
+
+### Use Cases
+
+| Scenario | Command |
+|----------|---------|
+| Going on vacation | `./stashme.sh -m "WIP: saving before vacation"` |
+| Machine migration | `./stashme.sh --summary backup-report.txt` |
+| Emergency backup | `./stashme.sh ~/projects` |
+| Review pending work | `./stashme.sh --list` |
+| Recover saved work | `./stashme.sh --restore` |
+| Clean up old backups | `./stashme.sh --cleanup` |
+
+**→ [Full StashMe Documentation](STASHME/STASHME.md)**  
+**→ [Quick Reference Card](STASHME/STASHME-QUICK-REFERENCE.md)**
+
+---
+
+## 📁 Rename Directory Utility
 
 A safe and reliable tool for renaming directories with intelligent handling of git repositories, Docker containers, and automatic backups.
 
