@@ -395,17 +395,13 @@ ls -la ~/github
 
 ## FAQ
 
-**Q: Does this modify my working branch?**
-A: No. StashMe creates a new branch, commits there, then returns to your original branch. Your working tree remains unchanged.
+**Q: Does this modify my working branch?** A: No. StashMe creates a new branch, commits there, then returns to your original branch. Your working tree remains unchanged.
 
-**Q: What about untracked files?**
-A: All untracked files (not in `.gitignore`) are included in the stash.
+**Q: What about untracked files?** A: All untracked files (not in `.gitignore`) are included in the stash.
 
-**Q: Can I use this with private repos?**
-A: Yes, as long as you have push access to the remote.
+**Q: Can I use this with private repos?** A: Yes, as long as you have push access to the remote.
 
-**Q: How do I get my changes back?**
-A: Use `--restore` mode, or manually:
+**Q: How do I get my changes back?** A: Use `--restore` mode, or manually:
 ```bash
 git fetch origin
 git checkout stashme/2026-02-03-143021
@@ -413,16 +409,13 @@ git checkout stashme/2026-02-03-143021
 git cherry-pick stashme/2026-02-03-143021
 ```
 
-**Q: What if the branch already exists?**
-A: The script will fail unless you use `--force` to overwrite.
+**Q: What if the branch already exists?** A: The script will fail unless you use `--force` to overwrite.
 
-**Q: Can I exclude certain repos?**
-A: Not directly, but you can:
+**Q: Can I exclude certain repos?** A: Not directly, but you can:
 1. Use `--interactive` mode to skip repos
 2. Organize repos into separate directories
 
-**Q: Does this work with submodules?**
-A: Submodules are treated as separate repos if they have their own `.git` directory.
+**Q: Does this work with submodules?** A: Submodules are treated as separate repos if they have their own `.git` directory.
 
 ---
 
