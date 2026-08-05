@@ -10,7 +10,7 @@ on:
   pull_request:
     paths: ["**/*.md", "**/*.markdown"]
   push:
-    branches: [master]
+    branches: [main]
     paths: ["**/*.md", "**/*.markdown"]
 
 permissions:
