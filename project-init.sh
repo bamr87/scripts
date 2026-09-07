@@ -1,44 +1,50 @@
 #!/bin/bash
-"""
-File: project-init.sh
-Description: Comprehensive project initialization wizard for multi-stack projects with interactive and non-interactive modes
-Author: Amr Abdel-Motaleb <amr.abdel@gmail.com>
-Created: 2025-11-13
-Last Modified: 2025-11-13
-Version: 2.0.0
 
-Dependencies:
-- git: repository initialization and GitHub integration
-- bash 4+: arrays, extended test, and heredoc usage
-- curl (optional): license template downloads
-- python3 (optional): Django/Python project bootstrapping
-- node/npm (optional): React/Node project bootstrapping
-- gh (optional): programmatic GitHub repository creation
-
-Container Requirements:
-- Base Image: linux/amd64 with git, bash, curl and language runtimes for selected PROJECT_TYPE
-- Volumes:
-    - /workspace (recommended) mounted to host project root
-    - $HOME/.project-wizard for persisted config and logs
-- Environment:
-    - GITHUB_USERNAME / GITHUB_EMAIL for non-interactive Git setup (optional)
-
-Usage:
-    Interactive (recommended):
-        ./project-init.sh
-
-    Non-interactive (CI/headless):
-        PROJECT_TYPE=django PROJECT_NAME=myapp GITHUB_USERNAME=me \
-            ./project-init.sh --non-interactive
-
-    With explicit flags:
-        ./project-init.sh --type react --name my-react-app --dir "$HOME/github/my-react-app"
-
-Design Notes:
-- Implements Design for Failure (DFF) via set -euo pipefail and centralized logging
-- Encourages DRY by delegating stack-specific setup to helper functions and modules
-- Keeps it Simple (KIS) by preferring sensible defaults with optional overrides
-"""
+###############################################################################
+# File: project-init.sh
+# Description: Comprehensive project initialization wizard for multi-stack
+#              projects with interactive and non-interactive modes
+# Author: Amr Abdel-Motaleb <amr.abdel@gmail.com>
+# Created: 2025-11-13
+# Last Modified: 2025-11-13
+# Version: 2.0.0
+#
+# Dependencies:
+# - git: repository initialization and GitHub integration
+# - bash 4+: arrays, extended test, and heredoc usage
+# - curl (optional): license template downloads
+# - python3 (optional): Django/Python project bootstrapping
+# - node/npm (optional): React/Node project bootstrapping
+# - gh (optional): programmatic GitHub repository creation
+#
+# Container Requirements:
+# - Base Image: linux/amd64 with git, bash, curl and language runtimes for the
+#   selected PROJECT_TYPE
+# - Volumes:
+#     - /workspace (recommended) mounted to host project root
+#     - $HOME/.project-wizard for persisted config and logs
+# - Environment:
+#     - GITHUB_USERNAME / GITHUB_EMAIL for non-interactive Git setup (optional)
+#
+# Usage:
+#     Interactive (recommended):
+#         ./project-init.sh
+#
+#     Non-interactive (CI/headless):
+#         PROJECT_TYPE=django PROJECT_NAME=myapp GITHUB_USERNAME=me \
+#             ./project-init.sh --non-interactive
+#
+#     With explicit flags:
+#         ./project-init.sh --type react --name my-react-app \
+#             --dir "$HOME/github/my-react-app"
+#
+# Design Notes:
+# - Implements Design for Failure (DFF) via set -euo pipefail and centralized
+#   logging
+# - Encourages DRY by delegating stack-specific setup to helper functions
+# - Keeps it Simple (KIS) by preferring sensible defaults with optional
+#   overrides
+###############################################################################
 
 set -euo pipefail  # Exit on error, undefined variables, and pipe failures
 
@@ -58,10 +64,29 @@ readonly RESET='\033[0m'
 # 📁 DEFAULT CONFIGURATION
 # ==============================================================================
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly CONFIG_FILE="${HOME}/.project-wizard/config"
 readonly TEMPLATES_DIR="${HOME}/.project-wizard/templates"
 readonly DEFAULT_GITHUB_DIR="${HOME}/github"
 readonly LOG_FILE="${HOME}/.project-wizard/wizard.log"
+
+# Not readonly: --config overrides it, and main() writes the resolved settings
+# back here on success.
+CONFIG_FILE="${HOME}/.project-wizard/config"
+
+# Wizard settings. Declared up front so `set -u` cannot abort on the paths that
+# read them before a prompt or an env var has assigned one. Any of these may be
+# preset from the environment, a --config file, or a .env in the working
+# directory.
+PROJECT_TYPE="${PROJECT_TYPE:-}"
+PROJECT_NAME="${PROJECT_NAME:-}"
+PROJECT_DIR="${PROJECT_DIR:-}"
+PROJECT_DESCRIPTION="${PROJECT_DESCRIPTION:-}"
+GITHUB_USERNAME="${GITHUB_USERNAME:-}"
+GITHUB_EMAIL="${GITHUB_EMAIL:-}"
+LICENSE="${LICENSE:-}"
+SETUP_DOCKER="${SETUP_DOCKER:-}"
+SETUP_CI="${SETUP_CI:-}"
+PRIVATE_REPO="${PRIVATE_REPO:-}"
+NON_INTERACTIVE="${NON_INTERACTIVE:-false}"
 
 # Initialize logging
 mkdir -p "$(dirname "$LOG_FILE")"
@@ -92,6 +117,19 @@ log() {
 error_exit() {
     log ERROR "$1"
     exit 1
+}
+
+# Guard a flag that takes a value. Without this, a missing value makes `set -u`
+# abort on the bare "$2" with an unhelpful "unbound variable".
+require_value() {
+    local flag=$1
+    local value=${2:-}
+
+    if [ -z "$value" ]; then
+        log ERROR "Option $flag requires a value"
+        show_help
+        exit 1
+    fi
 }
 
 check_command() {
@@ -843,23 +881,31 @@ EOF
 # ==============================================================================
 
 main() {
+    # Flags are staged in locals so that a --config file, which is sourced after
+    # the loop, cannot clobber a setting the caller passed explicitly.
+    local config_override="" opt_type="" opt_name="" opt_dir=""
+
     # Parse command line arguments
     while [[ $# -gt 0 ]]; do
         case $1 in
             --config)
-                CONFIG_FILE="$2"
+                require_value "$1" "${2:-}"
+                config_override="$2"
                 shift 2
                 ;;
             --type)
-                PROJECT_TYPE="$2"
+                require_value "$1" "${2:-}"
+                opt_type="$2"
                 shift 2
                 ;;
             --name)
-                PROJECT_NAME="$2"
+                require_value "$1" "${2:-}"
+                opt_name="$2"
                 shift 2
                 ;;
             --dir)
-                PROJECT_DIR="$2"
+                require_value "$1" "${2:-}"
+                opt_dir="$2"
                 shift 2
                 ;;
             --non-interactive)
@@ -877,7 +923,19 @@ main() {
                 ;;
         esac
     done
-    
+
+    if [ -n "$config_override" ]; then
+        [ -f "$config_override" ] || error_exit "Config file not found: $config_override"
+        log INFO "Loading configuration from $config_override"
+        # shellcheck source=/dev/null  # caller-supplied path, unknown at lint time
+        source "$config_override"
+        CONFIG_FILE="$config_override"
+    fi
+
+    PROJECT_TYPE="${opt_type:-$PROJECT_TYPE}"
+    PROJECT_NAME="${opt_name:-$PROJECT_NAME}"
+    PROJECT_DIR="${opt_dir:-$PROJECT_DIR}"
+
     # Check for required tools
     log INFO "Checking system requirements..."
     check_command git || error_exit "Git is required but not installed"
@@ -928,7 +986,8 @@ Usage: $(basename "$0") [OPTIONS]
 Comprehensive project initialization wizard with support for multiple project types.
 
 OPTIONS:
-    --config FILE          Use configuration file
+    --config FILE         Source settings from FILE before prompting; the flags
+                          below still win over it
     --type TYPE           Set project type (django, react, node, python, custom)
     --name NAME           Set project name
     --dir DIRECTORY       Set project directory
@@ -956,7 +1015,11 @@ EXAMPLES:
     # Specify project type and name
     $(basename "$0") --type react --name my-react-app
 
-For more information, visit: https://github.com/your-repo/project-wizard
+Settings are also read from a .env in the current directory (interactive mode),
+and the resolved configuration is saved to ~/.project-wizard/config on success.
+Logs: ~/.project-wizard/wizard.log
+
+For more information, visit: https://github.com/bamr87/scripts
 
 EOF
 }

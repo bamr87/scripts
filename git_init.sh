@@ -97,7 +97,7 @@ parse_args() {
                 usage
                 ;;
             --) shift; break;;
-            -*|--*=)
+            -*)
                 echo "Unknown option: $1" >&2
                 usage
                 ;;
