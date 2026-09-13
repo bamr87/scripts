@@ -22,6 +22,19 @@
 #     ensures project-init.sh is executable, and exposes a project-wizard
 #     command on your PATH (via ~/.local/bin).
 #
+#   WHICH INSTALLER DO I WANT?
+#     This is the STANDALONE path — for users who cloned only this repo.
+#     It deliberately wires up project-init.sh alone.
+#
+#     If you have the bamr87/bamr87 hub checked out, use its bootstrap
+#     instead (`./tools/setup.sh`): its setup_script_cli_tools() marks every
+#     *.sh here executable and symlinks the FULL set into ~/.local/bin —
+#     forkme, stashme, git-init, project-wizard, rename-dir, create-package.
+#     That is a strict superset of this script for CLI installation, so
+#     running both is idempotent but redundant. What this script adds on top
+#     is the ~/.project-wizard config directory and the env.example copy,
+#     which the hub does not create.
+#
 #   ENV NOTES:
 #     - For zsh users on macOS, PATH is appended to ~/.zshrc
 #     - For bash users, PATH is appended to ~/.bashrc
