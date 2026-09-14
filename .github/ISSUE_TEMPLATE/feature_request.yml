@@ -1,0 +1,65 @@
+name: Feature request
+description: A new flag, a new behaviour, or a new script
+title: "feat: "
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    id: shape
+    attributes:
+      label: What shape is this?
+      options:
+        - A new flag or option on an existing script
+        - A behaviour change to an existing script
+        - A new script in this repository
+        - Documentation only
+    validations:
+      required: true
+
+  - type: input
+    id: script
+    attributes:
+      label: Script
+      description: The script this touches, or "new" if you are proposing one.
+      placeholder: stashme.sh
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you doing by hand today?
+      description: >-
+        Describe the workflow, not the solution. These are developer tools — the
+        strongest case for a feature is the command sequence it replaces.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed interface
+      description: Sketch the command line as you would want to type it, and what it should print.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: >-
+        Including doing nothing. If an existing flag almost does this, say which
+        one and why it falls short.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: constraints
+    attributes:
+      label: Constraints
+      description: These tools are invoked by other automation, so new behaviour has to be additive.
+      options:
+        - label: This change is backward compatible — no existing flag, default, or output contract changes meaning.
+          required: false
+        - label: This would be a breaking change, and I have explained why it is worth it above.
+          required: false

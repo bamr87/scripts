@@ -1,0 +1,71 @@
+name: Bug report
+description: A script does something other than what it documents
+title: "fix: "
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: script
+    attributes:
+      label: Which script?
+      options:
+        - project-init.sh
+        - git_init.sh
+        - forkme.sh (FORKME/)
+        - stashme.sh (STASHME/)
+        - rename-directory.sh
+        - create_package.sh
+        - install.sh
+        - tools/unwrap-prose.py
+        - other / not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: command
+    attributes:
+      label: Exact command you ran
+      description: >-
+        Paste the full command line, including flags. Redact tokens and private
+        repository names, but keep the shape of the arguments — most bugs in
+        these tools live in argument parsing.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected, and what happened instead
+      description: >-
+        Quote the line of `--help`, the README, or the tool's own docs page that
+        set your expectation, if there is one.
+    validations:
+      required: true
+
+  - type: textarea
+    id: output
+    attributes:
+      label: Output
+      description: Script output, including any `[ERROR]` / `[WARNING]` lines. Re-run with `--verbose` or `--dry-run` if the tool supports it.
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: "Output of: `bash --version | head -1`, `uname -a`, `git --version`, and `gh --version` if the script uses `gh`."
+      render: shell
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before filing
+      options:
+        - label: I am on the tip of the default branch (`git pull`), not an older checkout.
+          required: true
+        - label: If the script has a `--dry-run` mode, I ran it and included the output above.
+          required: false
