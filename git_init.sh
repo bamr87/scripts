@@ -46,60 +46,77 @@ Options:
     -t, --template OWNER/REPO Create repo from a GitHub template (requires gh)
     --headless                Headless mode (don't ask interactive prompts)
     --no-push                 Do not push to remote (local only)
+    --dry-run                 Print the actions that would be taken; change nothing
     -h, --help                Show this help and exit
 
 Example:
     $(basename "$0") --headless -n myrepo -u myuser -d "My demo repo" --gitignore python,macos --scaffold python
+    $(basename "$0") --headless -n previewme --dry-run
 EOF
-        exit 1
+        exit "${1:-1}"
+}
+
+# Bail out with a usable message when a value-taking option is last on the
+# command line; without this, "set -u" would abort on the unset "$2" instead.
+missing_value() {
+    echo "Error: option '$1' requires a value." >&2
+    usage 1
 }
 
 parse_args() {
     while (( "$#" )); do
         case "$1" in
             -n|--name)
-                REPO_NAME="$2" && shift 2 || usage
+                [ $# -ge 2 ] || missing_value "$1"
+                REPO_NAME="$2"; shift 2
                 ;;
             -u|--user)
-                GITHUB_USER="$2" && shift 2 || usage
+                [ $# -ge 2 ] || missing_value "$1"
+                GITHUB_USER="$2"; shift 2
                 ;;
             -d|--desc)
-                REPO_DESC="$2" && shift 2 || usage
+                [ $# -ge 2 ] || missing_value "$1"
+                REPO_DESC="$2"; shift 2
                 ;;
             -p|--private)
-                VISIBILITY="private" && shift
+                VISIBILITY="private"; shift
                 ;;
             --path)
-                BASE_DIR="$2" && shift 2 || usage
+                [ $# -ge 2 ] || missing_value "$1"
+                BASE_DIR="$2"; shift 2
                 ;;
             --license)
-                LICENSE="$2" && shift 2 || usage
+                [ $# -ge 2 ] || missing_value "$1"
+                LICENSE="$2"; shift 2
                 ;;
             --gitignore)
-                GITIGNORE="$2" && shift 2 || usage
+                [ $# -ge 2 ] || missing_value "$1"
+                GITIGNORE="$2"; shift 2
                 ;;
             --scaffold)
-                SCAFFOLD="$2" && shift 2 || usage
+                [ $# -ge 2 ] || missing_value "$1"
+                SCAFFOLD="$2"; shift 2
                 ;;
             -t|--template)
-                TEMPLATE="$2" && shift 2 || usage
+                [ $# -ge 2 ] || missing_value "$1"
+                TEMPLATE="$2"; shift 2
                 ;;
             --headless)
-                MODE="headless" && shift
+                MODE="headless"; shift
                 ;;
             --no-push)
-                FORCE_NO_PUSH=true && shift
+                FORCE_NO_PUSH=true; shift
                 ;;
             --dry-run)
-                DRY_RUN=true && shift
+                DRY_RUN=true; shift
                 ;;
             -h|--help)
-                usage
+                usage 0
                 ;;
             --) shift; break;;
-            -*|--*=)
+            -*)
                 echo "Unknown option: $1" >&2
-                usage
+                usage 1
                 ;;
             *)
                 # positional argument, maybe repo name
@@ -373,12 +390,20 @@ if [ "$MODE" = "headless" ]; then
             echo "gh CLI create failed or repo already exists. We'll add remote URL if not set." >&2
             git remote add origin "$REMOTE_URL" 2>/dev/null || true
         fi
+    elif [ "$DRY_RUN" = true ]; then
+        echo "DRYRUN: Would run git remote add origin $REMOTE_URL"
     else
         git remote add origin "$REMOTE_URL" 2>/dev/null || true
     fi
 fi
 
-git branch -M "$DEFAULT_BRANCH" || true
+# A dry run never reaches the "cd" into REPO_PATH, so an unguarded git write
+# here would land in whatever repository the caller happens to be standing in.
+if [ "$DRY_RUN" = true ]; then
+    echo "DRYRUN: Would rename the current branch to $DEFAULT_BRANCH"
+else
+    git branch -M "$DEFAULT_BRANCH" || true
+fi
 if [ "$FORCE_NO_PUSH" = false ]; then
     if [ "$DRY_RUN" = true ]; then
         echo "DRYRUN: Would push branch $DEFAULT_BRANCH to origin"
