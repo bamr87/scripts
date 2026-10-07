@@ -11,11 +11,11 @@ A standalone collection of Bash command-line utilities (plus one Python tool) fo
 - `forkme.sh` (symlink → `FORKME/forkme.sh`) — repository forking/cloning utility with 10 strategies (full, shallow, sparse, filetype, analysis, mirror, …); full docs under `FORKME/`.
 - `STASHME/stashme.sh` — multi-repo cloud stash: pushes uncommitted work across many repos to timestamped `stashme/…` backup branches, with `--dry-run`, `--restore`, and `--cleanup`; full docs under `STASHME/`.
 - `rename-directory.sh` — safe directory rename with git/Docker pre-flight checks and optional backup (see `RENAME-DIRECTORY-QUICK-REFERENCE.md`).
-- `.github.sh` — generates a `.github/` folder structure (workflows, instructions, issue/PR templates) for a target project type.
 - `create_package.sh` — bootstraps a Python package repo from `microsoft/python-package-template`.
-- `linting/` — `setup-lint-configs.sh` deploys and `validate-lint-setup.sh` validates shared lint configs (`.shellcheckrc`, `.markdownlint.json`, …) across IT-Journey repos.
 - `tools/unwrap-prose.py` — Liquid-safe markdown unwrapper enforcing one-paragraph-per-line; seeded from the hub's prose kit and backed by `.github/workflows/markdown-oneline.yml`.
-- `example.sh` — trivial sample script; `.shellcheckrc`, `.markdownlint.json`, `.editorconfig` hold this repo's lint config.
+- `.shellcheckrc`, `.markdownlint.json`, `.editorconfig` hold this repo's lint config (`.editorconfig` is a hub fan-out artifact — byte-identical to the hub's; don't hand-edit it).
+
+**Don't re-add fleet-wide config/scaffold tooling here.** `.github.sh` (a `.github/` structure generator) and `linting/` (`setup-lint-configs.sh` / `validate-lint-setup.sh`) were retired in favour of the hub's `tools/fanout.sh` kits: `--kit standardize` owns `.editorconfig` + `ci.yml` + agent context, `--kit prose` owns the markdown gate, `templates/release-pipeline/` owns release automation, and `--kit deps-latest` owns the ALWAYS-LATEST dependency policy (which is why nothing here should emit a `dependabot.yml`). Config distribution is registry-driven, additive-only, and PR-based from the hub — not a local script walking hardcoded paths.
 
 ## Stack & commands
 
@@ -23,7 +23,7 @@ Pure Bash 4+ plus one Python 3 script — no dependency install, build step, or 
 
 ```bash
 # lint — the repo's primary gate (.shellcheckrc applies: SC2034/SC2086/SC1091 disabled):
-shellcheck *.sh FORKME/forkme.sh STASHME/stashme.sh linting/*.sh
+shellcheck --severity=warning *.sh FORKME/forkme.sh STASHME/stashme.sh
 
 # markdown gate — one paragraph per line (CI: .github/workflows/markdown-oneline.yml):
 python3 tools/unwrap-prose.py --check      # fix with: python3 tools/unwrap-prose.py --write
