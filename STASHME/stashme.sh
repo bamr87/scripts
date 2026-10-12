@@ -53,9 +53,10 @@ fi
 
 # Script version
 readonly VERSION="1.0.0"
-readonly SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
-readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly ORIGINAL_DIR="$(pwd)"
+SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ORIGINAL_DIR="$(pwd)"
+readonly SCRIPT_NAME SCRIPT_DIR ORIGINAL_DIR
 
 # Default configuration
 BASE_DIR="${HOME}/github"

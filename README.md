@@ -120,13 +120,13 @@ Forking and cloning strategies that go beyond `git clone` — shallow and sparse
 Saves uncommitted changes across every git repo under a directory tree to timestamped remote backup branches (`stashme/2026-02-03-143021`). It never modifies your working branch:
 
 ```bash
-./stashme.sh                                    # stash all repos in ~/github
-./STASHME/stashme.sh ~/projects                 # a specific tree
-./stashme.sh --list                             # repos with uncommitted changes
-./stashme.sh --dry-run                          # preview
-./stashme.sh -m "WIP: saving before vacation"   # custom message
-./stashme.sh --restore                          # recover stashed changes
-./stashme.sh --cleanup                          # remove old stashme branches
+./STASHME/stashme.sh                                    # stash all repos in ~/github
+./STASHME/stashme.sh ~/projects                         # a specific tree
+./STASHME/stashme.sh --list                             # repos with uncommitted changes
+./STASHME/stashme.sh --dry-run                          # preview
+./STASHME/stashme.sh -m "WIP: saving before vacation"   # custom message
+./STASHME/stashme.sh --restore                          # recover stashed changes
+./STASHME/stashme.sh --cleanup                          # remove old stashme branches
 ```
 
 → [Full StashMe documentation](STASHME/STASHME.md) · [Quick reference](STASHME/STASHME-QUICK-REFERENCE.md)

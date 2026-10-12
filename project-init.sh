@@ -62,7 +62,8 @@ readonly RESET='\033[0m'
 # ==============================================================================
 # 📁 DEFAULT CONFIGURATION
 # ==============================================================================
-readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly SCRIPT_DIR
 readonly CONFIG_FILE="${HOME}/.project-wizard/config"
 readonly TEMPLATES_DIR="${HOME}/.project-wizard/templates"
 readonly DEFAULT_GITHUB_DIR="${HOME}/github"
@@ -80,7 +81,8 @@ log() {
     local level=$1
     shift
     local message="$*"
-    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    local timestamp
+    timestamp=$(date '+%Y-%m-%d %H:%M:%S')
     
     case $level in
         ERROR)   echo -e "${RED}❌ ERROR: ${message}${RESET}" >&2 ;;
@@ -785,7 +787,8 @@ setup_git_and_github() {
         log STEP "Creating GitHub repository..."
         
         if ! gh repo view "$GITHUB_USERNAME/$PROJECT_NAME" &>/dev/null; then
-            local visibility=$([ "$PRIVATE_REPO" = true ] && echo "--private" || echo "--public")
+            local visibility="--public"
+            if [ "$PRIVATE_REPO" = true ]; then visibility="--private"; fi
             
             gh repo create "$GITHUB_USERNAME/$PROJECT_NAME" \
                 $visibility \
