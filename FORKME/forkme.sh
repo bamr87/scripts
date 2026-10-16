@@ -437,11 +437,14 @@ analyze_repo_structure() {
     echo "═══════════════════════════════════════════════════════════════"
     
     # Directory count
-    local dir_count=$(find "$clone_dir" -type d ! -path "*/.git/*" | wc -l)
+    # Counts are best-effort: an unreadable subdirectory must not abort the report under pipefail
+    local dir_count
+    dir_count=$(find "$clone_dir" -type d ! -path "*/.git/*" | wc -l) || true
     echo "📁 Total Directories: $dir_count"
     
     # File count
-    local file_count=$(find "$clone_dir" -type f ! -path "*/.git/*" | wc -l)
+    local file_count
+    file_count=$(find "$clone_dir" -type f ! -path "*/.git/*" | wc -l) || true
     echo "📄 Total Files: $file_count"
     
     # File type distribution
@@ -485,7 +488,8 @@ strategy_full() {
             # Check if fork already exists
             local username
             username=$(gh api user | jq -r '.login')
-            local repo_name=$(echo "$repo" | cut -d'/' -f2)
+            local repo_name
+            repo_name=$(echo "$repo" | cut -d'/' -f2)
             
             if gh repo view "$username/$repo_name" &> /dev/null; then
                 log_warning "Fork already exists: $username/$repo_name"
@@ -1601,7 +1605,8 @@ execute_fork() {
     
     # Determine target directory
     if [[ -z "$TARGET_DIR" ]]; then
-        local repo_name=$(echo "$repo" | cut -d'/' -f2)
+        local repo_name
+        repo_name=$(echo "$repo" | cut -d'/' -f2)
         TARGET_DIR="${WORK_DIR}/${repo_name}"
     fi
     
