@@ -147,7 +147,8 @@ run_or_echo() {
     if [ "$DRY_RUN" = true ]; then
         echo "DRYRUN: $*"
     else
-        eval "$@"
+        # Callers pass one pre-quoted command string (e.g. "git commit ... || true")
+        eval "$*"
     fi
 }
 
