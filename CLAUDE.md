@@ -6,7 +6,7 @@ A standalone collection of Bash command-line utilities (plus one Python tool) fo
 
 ## What's here
 
-- `project-init.sh` — interactive/non-interactive project scaffolding wizard (Django, React, Node, Python, Rust, Go, custom; optional Docker, CI, license, GitHub repo creation). Configured via `.env` (copy `env.example`); `install.sh` wires it into a per-user CLI.
+- `project-init.sh` — interactive/non-interactive project scaffolding wizard (Django, React, Node, Python, custom; optional Docker, CI, license, GitHub repo creation). Configured via `.env` (copy `env.example`); `install.sh` wires it into a per-user CLI.
 - `git_init.sh` — interactive/headless git + GitHub repo creator (prefers `gh`, falls back to `npx degit` for templates; gitignore.io for `.gitignore`; supports `--dry-run`).
 - `forkme.sh` (symlink → `FORKME/forkme.sh`) — repository forking/cloning utility with 10 strategies (full, shallow, sparse, filetype, analysis, mirror, …); full docs under `FORKME/`.
 - `STASHME/stashme.sh` — multi-repo cloud stash: pushes uncommitted work across many repos to timestamped `stashme/…` backup branches, with `--dry-run`, `--restore`, and `--cleanup`; full docs under `STASHME/`.

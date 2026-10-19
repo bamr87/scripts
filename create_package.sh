@@ -28,10 +28,28 @@
 # Fail fast on errors and unset variables
 set -euo pipefail
 
+usage() {
+  echo "Usage: $0 <package-name>"
+  echo "  Creates \$HOME/github/<package-name> from microsoft/python-package-template."
+}
+
 if [ $# -lt 1 ]; then
-  echo "Usage: $0 <package-name>" >&2
+  usage >&2
   exit 1
 fi
+
+case "$1" in
+  -h|--help)
+    usage
+    exit 0
+    ;;
+  -*|*/*|.|..)
+    # Guard against flags or paths being taken as the name and creating e.g. ~/github/--help
+    echo "Error: invalid package name '$1' (a plain directory name is expected)" >&2
+    usage >&2
+    exit 1
+    ;;
+esac
 
 PACKAGE_NAME="$1"
 
@@ -44,6 +62,7 @@ git init
 
 # Pull in the template from GitHub into a temporary folder and overlay into repo
 TEMP_DIR="$(mktemp -d)"
+trap 'rm -rf "$TEMP_DIR"' EXIT
 git clone --depth=1 https://github.com/microsoft/python-package-template.git "$TEMP_DIR"
 
 # Copy template files into current directory (excluding the .git folder)

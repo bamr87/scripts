@@ -145,16 +145,16 @@ select_option() {
     local prompt=$1
     shift
     local options=("$@")
-    local selection
-    
-    echo -e "${CYAN}${prompt}${RESET}"
+
+    # Callers capture stdout via $(...), so only the chosen option may go to
+    # stdout; the prompt and warnings go to stderr (where `select` draws its menu).
+    echo -e "${CYAN}${prompt}${RESET}" >&2
     select opt in "${options[@]}"; do
         if [ -n "$opt" ]; then
-            selection=$REPLY
             echo "$opt"
             return 0
         else
-            log WARNING "Invalid selection. Please try again."
+            log WARNING "Invalid selection. Please try again." >&2
         fi
     done
 }
@@ -540,14 +540,21 @@ SOFTWARE.
 EOF
             ;;
             
-        Apache)
+        # The wizard menu and docs use the SPDX ids; the short names are kept
+        # for existing .env files.
+        Apache-2.0|Apache)
             log INFO "Downloading Apache 2.0 License..."
             curl -s https://www.apache.org/licenses/LICENSE-2.0.txt > LICENSE
             ;;
-            
-        GPL)
+
+        GPL-3.0|GPL)
             log INFO "Downloading GPL 3.0 License..."
             curl -s https://www.gnu.org/licenses/gpl-3.0.txt > LICENSE
+            ;;
+
+        *)
+            log WARNING "Unsupported license '${license_type}' (expected MIT, Apache-2.0, GPL-3.0 or None); no LICENSE file created"
+            return 0
             ;;
     esac
     
@@ -581,7 +588,7 @@ EOF
     # Project Type Selection
     echo -e "\n${BOLD}${CYAN}📦 Project Configuration${RESET}\n"
     
-    if [ -z "$PROJECT_TYPE" ]; then
+    if [ -z "${PROJECT_TYPE:-}" ]; then
         PROJECT_TYPE=$(select_option "Select your project type:" \
             "Django (Python Web Framework)" \
             "React (JavaScript UI Library)" \
@@ -614,7 +621,11 @@ EOF
     
     # Additional Options
     echo -e "\n${BOLD}${CYAN}⚙️  Additional Options${RESET}\n"
-    
+
+    # Only a sourced .env/--config file can set this here; default it so the
+    # checks below don't trip `set -u`.
+    : "${NON_INTERACTIVE:=false}"
+
     : ${SETUP_DOCKER:=false}
     if [ -z "$NON_INTERACTIVE" ] || [ "$NON_INTERACTIVE" = false ]; then
         prompt_yes_no "Setup Docker configuration?" "y" && SETUP_DOCKER=true
@@ -854,8 +865,18 @@ main() {
     # Parse command line arguments
     while [[ $# -gt 0 ]]; do
         case $1 in
+            --config|--type|--name|--dir)
+                # Without this, `set -u` aborts on the missing "$2" instead.
+                [ $# -ge 2 ] || error_exit "Option '$1' requires a value"
+                ;;
+        esac
+        case $1 in
             --config)
-                CONFIG_FILE="$2"
+                # Load defaults from an env-style file (e.g. a copy of
+                # env.example). CONFIG_FILE stays the "last used" save path.
+                [ -f "$2" ] || error_exit "Config file not found: $2"
+                # shellcheck source=/dev/null
+                source "$2"
                 shift 2
                 ;;
             --type)
@@ -874,7 +895,7 @@ main() {
                 NON_INTERACTIVE=true
                 shift
                 ;;
-            --help)
+            -h|--help)
                 show_help
                 exit 0
                 ;;
@@ -906,7 +927,14 @@ main() {
         : ${SETUP_CI:=false}
         : ${PRIVATE_REPO:=false}
     fi
-    
+
+    # Fail before anything is created rather than scaffolding an empty repo
+    # for a type initialize_project has no branch for.
+    case "$PROJECT_TYPE" in
+        django|react|node|python|custom) ;;
+        *) error_exit "Unsupported project type '$PROJECT_TYPE' (expected: django, react, node, python, custom)" ;;
+    esac
+
     # Initialize the project
     initialize_project
     
@@ -936,12 +964,16 @@ Usage: $(basename "$0") [OPTIONS]
 Comprehensive project initialization wizard with support for multiple project types.
 
 OPTIONS:
-    --config FILE          Use configuration file
+    --config FILE         Load defaults from an env-style file (e.g. a copy of env.example)
     --type TYPE           Set project type (django, react, node, python, custom)
     --name NAME           Set project name
     --dir DIRECTORY       Set project directory
     --non-interactive     Run in non-interactive mode (uses env vars)
-    --help               Show this help message
+    -h, --help            Show this help message
+
+--config is applied where it appears, so pass it first; flags after it win.
+Interactive mode also sources ./.env from the current directory; any
+variable it sets overrides the same value from flags or --config.
 
 ENVIRONMENT VARIABLES:
     PROJECT_TYPE          Type of project to create
@@ -949,7 +981,7 @@ ENVIRONMENT VARIABLES:
     PROJECT_DIR           Directory for the project
     GITHUB_USERNAME       GitHub username
     GITHUB_EMAIL          GitHub email
-    LICENSE               License type (MIT, Apache-2.0, GPL-3.0)
+    LICENSE               License type (MIT, Apache-2.0, GPL-3.0, None)
     SETUP_DOCKER          Setup Docker configuration (true/false)
     SETUP_CI              Setup CI/CD (true/false)
     PRIVATE_REPO          Make repository private (true/false)
@@ -964,7 +996,7 @@ EXAMPLES:
     # Specify project type and name
     $(basename "$0") --type react --name my-react-app
 
-For more information, visit: https://github.com/your-repo/project-wizard
+For more information, visit: https://github.com/bamr87/scripts
 
 EOF
 }
