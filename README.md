@@ -35,7 +35,7 @@ cd /path/to/bamr87        # the hub checkout
 ./tools/setup.sh          # or: ./tools/setup-dev.sh
 ```
 
-**If you only have this repo**, use the standalone installer. It is narrower on purpose — it wires up the Project Initialization Wizard only (`project-wizard`), creates `~/.project-wizard/`, appends `~/.local/bin` to your shell `PATH`, and drops a copy of `env.example` for you to customize:
+**If you only have this repo**, use the standalone installer. It is narrower on purpose — it wires up the Project Initialization Wizard only (`project-wizard`), creates `~/.project-wizard/`, appends `~/.local/bin` to your shell `PATH`, and drops a copy of `.env.example` for you to customize:
 
 ```bash
 git clone https://github.com/bamr87/scripts.git
@@ -75,7 +75,7 @@ PROJECT_TYPE=django PROJECT_NAME=my-api SETUP_DOCKER=true SETUP_CI=true \
 ./project-init.sh --type react --name my-react-app --dir ~/projects/my-react-app
 ```
 
-To set your own defaults, copy [`env.example`](env.example) and either pass it with `--config FILE` (any mode; it is applied where it appears, so put it first and let later flags override it) or save it as `.env` in the directory you run the wizard from (interactive mode only; a `.env` overrides flags and `--config`). Only the variables below are read; the rest of `env.example` is reserved and currently ignored. An unsupported `PROJECT_TYPE` stops the wizard before anything is created. Key options:
+To set your own defaults, copy [`.env.example`](.env.example) and either pass it with `--config FILE` (any mode; it is applied where it appears, so put it first and let later flags override it) or save it as `.env` in the directory you run the wizard from (interactive mode only; a `.env` overrides flags and `--config`). Only the variables below are read; the rest of `.env.example` is reserved and currently ignored. An unsupported `PROJECT_TYPE` stops the wizard before anything is created. Key options:
 
 | Variable | Description | Options |
 | --- | --- | --- |
@@ -94,7 +94,7 @@ Full option list:
 ```text
 Usage: project-init.sh [OPTIONS]
 
-    --config FILE       Load defaults from an env-style file (e.g. a copy of env.example)
+    --config FILE       Load defaults from an env-style file (e.g. a copy of .env.example)
     --type TYPE         Set project type (django, react, node, python, custom)
     --name NAME         Set project name
     --dir DIRECTORY     Set project directory
