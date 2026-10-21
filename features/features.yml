@@ -40,15 +40,80 @@ schema: features/v1
 repo: bamr87/scripts
 
 features:
-  - id: TODO-001
-    title: "TODO: the first thing a user does here"
-    description: "TODO: replace with the primary user-facing capability of scripts."
+  - id: SCRIPTS-001
+    title: "Project initialization wizard"
+    description: "Scaffold a Django, React, Node, Python, or custom project — optionally with Docker, CI, a license, and a GitHub repo — interactively or from flags/env vars."
     implemented: true
-    surface: ui
-    link: /
-    docs: README.md
-    tags: [todo]
+    surface: cli
+    link: project-init.sh
+    docs: README.md#project-initialization-wizard
+    tags: [scaffolding]
     tests: []
-    scenarios:
-      - verify/scenarios/smoke-home.yml
+    scenarios: []
+    evidence: []
+  - id: SCRIPTS-002
+    title: "ForkMe repository forking/cloning"
+    description: "Fork or clone a GitHub repository with one of 10 strategies (full, shallow, sparse, filetype, analysis, mirror, …) instead of a plain git clone."
+    implemented: true
+    surface: cli
+    link: FORKME/forkme.sh
+    docs: FORKME/FORKME.md
+    tags: [github]
+    tests: []
+    scenarios: []
+    evidence: []
+  - id: SCRIPTS-003
+    title: "StashMe multi-repo cloud stash"
+    description: "Push uncommitted work across every repo under a directory tree to timestamped stashme/… remote branches, then list, restore, or clean them up."
+    implemented: true
+    surface: cli
+    link: STASHME/stashme.sh
+    docs: STASHME/STASHME.md
+    tags: [multi-repo, backup]
+    tests: []
+    scenarios: []
+    evidence: []
+  - id: SCRIPTS-004
+    title: "Git + GitHub repository creator"
+    description: "Create a local git repo and, optionally, its GitHub remote (gh first, npx degit for templates, gitignore.io for .gitignore), interactively or headless with --dry-run."
+    implemented: true
+    surface: cli
+    link: git_init.sh
+    docs: README.md#git-init
+    tags: [github, scaffolding]
+    tests: []
+    scenarios: []
+    evidence: []
+  - id: SCRIPTS-005
+    title: "Safe directory rename"
+    description: "Rename a directory after git-status and Docker-container pre-flight checks, with an optional backup and post-rename verification."
+    implemented: true
+    surface: cli
+    link: rename-directory.sh
+    docs: RENAME-DIRECTORY-QUICK-REFERENCE.md
+    tags: [filesystem]
+    tests: []
+    scenarios: []
+    evidence: []
+  - id: SCRIPTS-006
+    title: "Python package bootstrap"
+    description: "Seed a new Python package repo under ~/github/<name> from microsoft/python-package-template, staged but not committed."
+    implemented: true
+    surface: cli
+    link: create_package.sh
+    docs: README.md#create-package
+    tags: [scaffolding, python]
+    tests: []
+    scenarios: []
+    evidence: []
+  - id: SCRIPTS-007
+    title: "Markdown prose unwrapper"
+    description: "Check or rewrite markdown so each paragraph is one line, leaving Liquid, code fences, and tables intact; backs the markdown-oneline CI gate."
+    implemented: true
+    surface: cli
+    link: tools/unwrap-prose.py
+    docs: tools/README.md
+    tags: [docs, lint]
+    tests: []
+    scenarios: []
     evidence: []
