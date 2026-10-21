@@ -180,7 +180,7 @@ The name must be a plain directory name; anything starting with `-` or containin
 
 ## Project structure
 
-Each script sits at the root (or in its own folder, such as `FORKME/` and `STASHME/`); see the [Tool index](#-tool-index) for what each one does. `tools/` holds repo maintenance scripts.
+Each script sits at the root (or in its own folder, such as `FORKME/` and `STASHME/`); see the [Tool index](#-tool-index) for what each one does. `tools/` holds repo maintenance scripts ([index](tools/README.md)). The rest is hub-seeded SDLC scaffolding rather than tooling: [`docs/`](docs/README.md) (docs index and the [`docs/adr/`](docs/adr/README.md) decision log), [`features/features.yml`](features/features.yml) (the feature index) with [`verify/`](verify/verify.yml) (user scenarios), [`public/`](public/) (the page-feedback widget), and [`.github/sdlc.yml`](.github/sdlc.yml) (this repo's SDLC profile).
 
 ## ✅ Development
 
@@ -194,7 +194,7 @@ shellcheck --severity=warning *.sh FORKME/forkme.sh STASHME/stashme.sh
 python3 tools/unwrap-prose.py --check     # fix with: --write
 ```
 
-CI is [`.github/workflows/ci.yml`](.github/workflows/ci.yml), a thin caller of the hub's shared `bamr87/bamr87/.github/workflows/standard-ci.yml` gate — don't edit gate logic here. [`.github/workflows/claude.yml`](.github/workflows/claude.yml) is the hub-seeded `@claude` mention handler, and [`.github/workflows/markdown-oneline.yml`](.github/workflows/markdown-oneline.yml) is the prose gate.
+CI is [`.github/workflows/ci.yml`](.github/workflows/ci.yml), a thin caller of the hub's shared `bamr87/bamr87/.github/workflows/standard-ci.yml` gate — don't edit gate logic here. [`.github/workflows/claude.yml`](.github/workflows/claude.yml) is the hub-seeded `@claude` mention handler, [`.github/workflows/markdown-oneline.yml`](.github/workflows/markdown-oneline.yml) is the prose gate, and `conformance.yml`, `release.yml` (release-please), and `verify.yml` are likewise thin callers of hub workflows.
 
 New scripts follow the existing conventions: `set -euo pipefail`, a structured header comment (File/Description/Author/Version), colour-aware logging helpers, and a row in the tool index above.
 
