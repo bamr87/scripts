@@ -32,7 +32,7 @@
 #     forkme, stashme, git-init, project-wizard, rename-dir, create-package.
 #     That is a strict superset of this script for CLI installation, so
 #     running both is idempotent but redundant. What this script adds on top
-#     is the ~/.project-wizard config directory and the env.example copy,
+#     is the ~/.project-wizard config directory and the .env.example copy,
 #     which the hub does not create.
 #
 #   ENV NOTES:
@@ -91,10 +91,10 @@ EOF
 fi
 
 # Copy example configuration for users to customize defaults
-if [ -f "$SCRIPT_DIR/env.example" ]; then
+if [ -f "$SCRIPT_DIR/.env.example" ]; then
     echo "📋 Installing example configuration..."
-    cp "$SCRIPT_DIR/env.example" "$WIZARD_DIR/env.example"
-    echo "✅ Example configuration installed to $WIZARD_DIR/env.example"
+    cp "$SCRIPT_DIR/.env.example" "$WIZARD_DIR/.env.example"
+    echo "✅ Example configuration installed to $WIZARD_DIR/.env.example"
 fi
 
 echo ""
@@ -108,6 +108,6 @@ echo ""
 echo "📖 For more information:"
 echo "   - Run 'project-wizard --help' to see all options"
 echo "   - Check ${SCRIPT_DIR}/README.md for documentation"
-echo "   - Copy $WIZARD_DIR/env.example to .env for custom defaults"
+echo "   - Copy $WIZARD_DIR/.env.example to .env for custom defaults"
 echo ""
 echo "Happy coding! 🚀"
