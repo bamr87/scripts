@@ -1,5 +1,7 @@
 # Rename Directory Utility - Quick Reference
 
+> How to use rename-directory.sh: common renames, the pre-flight checks and prompts, what is preserved, follow-up steps and recovering from a backup.
+
 ## Basic Usage
 
 ```bash

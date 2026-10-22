@@ -1,5 +1,7 @@
 # ForkMe Real-World Examples
 
+> Step-by-step ForkMe scenarios: security audits, contribution prep, documentation extraction, research, CI/CD, infrastructure, migration planning and batch processing.
+
 This document provides practical, real-world examples of using ForkMe for various scenarios.
 
 ## 📚 Table of Contents
@@ -280,7 +282,7 @@ cd forkme-workspace/checkout/.github/workflows
 
 - name: Clone repository for testing
   run: |
-    curl -O https://raw.githubusercontent.com/bamr87/it-journey/main/scripts/FORKME/forkme.sh
+    curl -O https://raw.githubusercontent.com/bamr87/scripts/main/FORKME/forkme.sh
     chmod +x forkme.sh
     ./forkme.sh --strategy shallow --depth 1 --no-fork ${{ github.repository }}
 ```

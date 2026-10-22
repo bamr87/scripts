@@ -1,5 +1,7 @@
 # 💾 StashMe - Complete Documentation
 
+> The complete StashMe guide: installation, quick start, modes, branch naming, examples, best practices, troubleshooting and FAQ.
+
 ## Table of Contents
 
 - [Overview](#overview)
@@ -122,47 +124,7 @@ echo 'alias stashme="/path/to/stashme.sh"' >> ~/.zshrc
 
 ## Options
 
-### Directory Options
-
-| Option | Description | Default |
-|--------|-------------|---------|
-| `-d, --dir <path>` | Base directory to search | `~/github` |
-| `--max-depth <n>` | Maximum directory depth | `3` |
-| `--include-hidden` | Include hidden directories | `false` |
-
-### Branch Options
-
-| Option | Description | Default |
-|--------|-------------|---------|
-| `-b, --branch <name>` | Custom branch name | Auto-generated |
-| `--prefix <prefix>` | Branch name prefix | `stashme` |
-| `--suffix <suffix>` | Branch name suffix | None |
-
-### Commit Options
-
-| Option | Description | Default |
-|--------|-------------|---------|
-| `-m, --message <msg>` | Custom commit message | Auto-generated |
-| `--no-push` | Don't push to remote | `false` |
-| `-f, --force` | Force push | `false` |
-
-### Mode Options
-
-| Option | Description |
-|--------|-------------|
-| `-l, --list` | List repos with changes (no action) |
-| `-r, --restore` | Restore mode: checkout stashme branches |
-| `--cleanup` | Cleanup mode: delete stashme branches |
-| `-i, --interactive` | Confirm before each action |
-
-### Output Options
-
-| Option | Description |
-|--------|-------------|
-| `-v, --verbose` | Enable verbose output |
-| `-q, --quiet` | Suppress non-error output |
-| `--dry-run` | Preview without executing |
-| `--summary <file>` | Write summary to file |
+`./STASHME/stashme.sh --help` prints every option with its default, grouped as directory, branch, commit, mode, output and information options, plus examples. The help text is the authoritative list, so it is not copied here; the modes are explained below.
 
 ## Modes
 

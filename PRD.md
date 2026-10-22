@@ -1,8 +1,8 @@
 # PRD — scripts
 
-> Product requirements for [`bamr87/scripts`](https://github.com/bamr87/scripts).
-> Derived from the README, agent docs, config and code in this repo. Anything not
-> stated in those sources is marked **TBD**; success metrics are proposals.
+> The product requirements for bamr87/scripts: the problem, users, goals, features, requirements, success measures and open questions.
+
+Derived from the README, agent docs, config and code in this repo. Anything not stated in those sources is marked **TBD**; success metrics are proposals.
 
 ## 1. Overview / problem
 
@@ -64,4 +64,4 @@ A standalone collection of Bash command-line utilities (plus one Python tool) fo
 
 ## 8. Links
 
-- [README.md](README.md) · [AGENTS.md](AGENTS.md) · [CHANGELOG.md](CHANGELOG.md) · [FORKME/FORKME.md](FORKME/FORKME.md) · [STASHME/STASHME.md](STASHME/STASHME.md)
+- [README.md](README.md) · [AGENTS.md](AGENTS.md) · [CHANGELOG.md](CHANGELOG.md) · [FORKME/FORKME.md](FORKME/FORKME.md) · [STASHME/STASHME.md](STASHME/STASHME.md) · [Issues](https://github.com/bamr87/scripts/issues) (the backlog of record)
