@@ -6,7 +6,7 @@ A standalone collection of Bash command-line utilities (plus one Python tool) fo
 
 ## What's here
 
-- `project-init.sh` — interactive/non-interactive project scaffolding wizard (Django, React, Node, Python, custom; optional Docker, CI, license, GitHub repo creation). Configured via `.env` (copy `env.example`); `install.sh` wires it into a per-user CLI.
+- `project-init.sh` — interactive/non-interactive project scaffolding wizard (Django, React, Node, Python, custom; optional Docker, CI, license, GitHub repo creation). Configured via `.env` or `--config FILE` (copy `.env.example`); `install.sh` wires it into a per-user CLI.
 - `git_init.sh` — interactive/headless git + GitHub repo creator (prefers `gh`, falls back to `npx degit` for templates; gitignore.io for `.gitignore`; supports `--dry-run`).
 - `forkme.sh` (symlink → `FORKME/forkme.sh`) — repository forking/cloning utility with 10 strategies (full, shallow, sparse, filetype, analysis, mirror, …); full docs under `FORKME/`.
 - `STASHME/stashme.sh` — multi-repo cloud stash: pushes uncommitted work across many repos to timestamped `stashme/…` backup branches, with `--dry-run`, `--restore`, and `--cleanup`; full docs under `STASHME/`.
@@ -15,7 +15,7 @@ A standalone collection of Bash command-line utilities (plus one Python tool) fo
 - `tools/unwrap-prose.py` — Liquid-safe markdown unwrapper enforcing one-paragraph-per-line; seeded from the hub's prose kit and backed by `.github/workflows/markdown-oneline.yml`.
 - `.shellcheckrc`, `.markdownlint.json`, `.editorconfig` hold this repo's lint config (`.editorconfig` is a hub fan-out artifact — byte-identical to the hub's; don't hand-edit it).
 
-**Don't re-add fleet-wide config/scaffold tooling here.** `.github.sh` (a `.github/` structure generator) and `linting/` (`setup-lint-configs.sh` / `validate-lint-setup.sh`) were retired in favour of the hub's `tools/fanout.sh` kits: `--kit standardize` owns `.editorconfig` + `ci.yml` + agent context, `--kit prose` owns the markdown gate, `templates/release-pipeline/` owns release automation, and `--kit deps-latest` owns the ALWAYS-LATEST dependency policy (which is why nothing here should emit a `dependabot.yml`). Config distribution is registry-driven, additive-only, and PR-based from the hub — not a local script walking hardcoded paths.
+**Don't re-add fleet-wide config/scaffold tooling here.** `.github.sh` (a `.github/` structure generator) and `linting/` (`setup-lint-configs.sh` / `validate-lint-setup.sh`) were retired in favour of the hub's `tools/fanout.sh` kits: `--kit standardize` owns `.editorconfig` + `ci.yml` + agent context, `--kit prose` owns the markdown gate, `templates/release-pipeline/` owns release automation, and `--kit deps-latest` owns the ALWAYS-LATEST dependency policy (which is why the community-kit `.github/dependabot.yml` covers `github-actions` only — never add a package ecosystem to it). Config distribution is registry-driven, additive-only, and PR-based from the hub — not a local script walking hardcoded paths.
 
 ## Stack & commands
 
@@ -33,7 +33,7 @@ python3 tools/unwrap-prose.py --check      # fix with: python3 tools/unwrap-pros
 ./STASHME/stashme.sh --dry-run
 ```
 
-There is no test suite (no `tests/` directory or test runner). CI is `.github/workflows/ci.yml`, a thin caller of the hub's shared `bamr87/bamr87/.github/workflows/standard-ci.yml` gate — don't edit the gate logic here. `.github/workflows/claude.yml` is the hub-seeded `@claude` mention handler (OAuth-first auth).
+There is no test suite (no `tests/` directory or test runner). CI is `.github/workflows/ci.yml`, a thin caller of the hub's shared `bamr87/bamr87/.github/workflows/standard-ci.yml` gate — don't edit the gate logic here. `.github/workflows/claude.yml` is the hub-seeded `@claude` mention handler (OAuth-first auth). The other workflows are hub kit callers too: `markdown-oneline.yml` (prose gate), `conformance.yml` (UPS conformance check), `release.yml` (release-please, driven by `release-please-config.json` + `.release-please-manifest.json`), and `verify.yml` (feature index + scenarios from `features/` and `verify/`).
 
 New scripts follow the existing conventions: `set -euo pipefail`, a structured header comment (File/Description/Author/Version), color-aware logging helpers, and an entry in `README.md`'s tool index.
 

@@ -45,13 +45,13 @@ Every user-facing capability has a stable id in the feature catalog [`features/f
 
 | ID | Feature | Status | Where | Requirements |
 | --- | --- | --- | --- | --- |
-| [SCRIPTS-001](features/features.yml) | project-init.sh (project-wizard): scaffolding for Django,… | shipped | [`project-init.sh`](project-init.sh) · [`README.md`](README.md) | TBD |
-| [SCRIPTS-002](features/features.yml) | FORKME/forkme.sh (forkme): 10 fork/clone strategies | shipped | [`FORKME/forkme.sh`](FORKME/forkme.sh) · [`README.md`](README.md) | TBD |
-| [SCRIPTS-003](features/features.yml) | STASHME/stashme.sh (stashme): multi-repo cloud stash to… | shipped | [`STASHME/stashme.sh`](STASHME/stashme.sh) · [`README.md`](README.md) | TBD |
-| [SCRIPTS-004](features/features.yml) | git_init.sh (git-init): git + GitHub repo creator | shipped | [`git_init.sh`](git_init.sh) · [`README.md`](README.md) | TBD |
-| [SCRIPTS-005](features/features.yml) | rename-directory.sh (rename-dir): safe rename with… | shipped | [`rename-directory.sh`](rename-directory.sh) · [`README.md`](README.md) | TBD |
-| [SCRIPTS-006](features/features.yml) | create_package.sh: Python package bootstrap | shipped | [`create_package.sh`](create_package.sh) · [`README.md`](README.md) | TBD |
-| [SCRIPTS-007](features/features.yml) | tools/unwrap-prose.py: markdown unwrapper backing the… | shipped | [`tools/unwrap-prose.py`](tools/unwrap-prose.py) · [`README.md`](README.md) | TBD |
+| [SCRIPTS-001](features/features.yml) | Project initialization wizard | shipped | [`project-init.sh`](project-init.sh) · `README.md#project-initialization-wizard` | TBD |
+| [SCRIPTS-002](features/features.yml) | ForkMe repository forking/cloning | shipped | [`FORKME/forkme.sh`](FORKME/forkme.sh) · [`FORKME/FORKME.md`](FORKME/FORKME.md) | TBD |
+| [SCRIPTS-003](features/features.yml) | StashMe multi-repo cloud stash | shipped | [`STASHME/stashme.sh`](STASHME/stashme.sh) · [`STASHME/STASHME.md`](STASHME/STASHME.md) | TBD |
+| [SCRIPTS-004](features/features.yml) | Git + GitHub repository creator | shipped | [`git_init.sh`](git_init.sh) · `README.md#git-init` | TBD |
+| [SCRIPTS-005](features/features.yml) | Safe directory rename | shipped | [`rename-directory.sh`](rename-directory.sh) · [`RENAME-DIRECTORY-QUICK-REFERENCE.md`](RENAME-DIRECTORY-QUICK-REFERENCE.md) | TBD |
+| [SCRIPTS-006](features/features.yml) | Python package bootstrap | shipped | [`create_package.sh`](create_package.sh) · `README.md#create-package` | TBD |
+| [SCRIPTS-007](features/features.yml) | Markdown prose unwrapper | shipped | [`tools/unwrap-prose.py`](tools/unwrap-prose.py) · [`tools/README.md`](tools/README.md) | TBD |
 | [SCRIPTS-008](features/features.yml) | install.sh standalone installer | shipped | [`install.sh`](install.sh) · [`README.md`](README.md) | TBD |
 
 **Requirement → feature trace**

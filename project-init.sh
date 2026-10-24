@@ -873,7 +873,7 @@ main() {
         case $1 in
             --config)
                 # Load defaults from an env-style file (e.g. a copy of
-                # env.example). CONFIG_FILE stays the "last used" save path.
+                # .env.example). CONFIG_FILE stays the "last used" save path.
                 [ -f "$2" ] || error_exit "Config file not found: $2"
                 # shellcheck source=/dev/null
                 source "$2"
@@ -964,7 +964,7 @@ Usage: $(basename "$0") [OPTIONS]
 Comprehensive project initialization wizard with support for multiple project types.
 
 OPTIONS:
-    --config FILE         Load defaults from an env-style file (e.g. a copy of env.example)
+    --config FILE         Load defaults from an env-style file (e.g. a copy of .env.example)
     --type TYPE           Set project type (django, react, node, python, custom)
     --name NAME           Set project name
     --dir DIRECTORY       Set project directory
