@@ -24,7 +24,9 @@
 
 | Document | What it covers |
 | --- | --- |
+| [`docs/constitution.md`](constitution.md) | The rules every change to this repo must satisfy, whoever makes it — a human or an AI agent. Agents read this before [AGENTS.md](../AGENTS.md) conventions, the [PRD](../PRD.md), or the [feature catalog](../features/features.yml). Ratified… |
 | [`docs/rename-directory-quick-reference.md`](rename-directory-quick-reference.md) | How to use rename-directory.sh: common renames, the pre-flight checks and prompts, what is preserved, follow-up steps and recovering from a backup. |
 | [`docs/adr/`](adr/README.md) | The architecture decision log for this repo: when to write an ADR, the format, and the list of decisions. |
+| [`docs/amendments/`](amendments/README.md) | The append-only log of changes to [the constitution](constitution.md). |
 
 <!-- AUTO:docs-index:end -->
