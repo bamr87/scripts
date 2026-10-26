@@ -48,14 +48,14 @@ python3 tools/docs_index.py --check                               # docs/README.
 - **Decisions:** ADRs in `docs/adr/NNNN-slug.md`, indexed in `docs/adr/README.md`.
 - **Commits:** Conventional Commits, `type(scope): description` (`feat fix docs refactor test chore ci`). The PR title is the squash subject.
 - **Branches:** `feature/`, `fix/`, `docs/`, `refactor/` or `test/` off `main` (the default branch); open a PR, never push to `main`.
-- **Changelog:** `CHANGELOG.md` is written by release-please (`release.yml`, `release-please-config.json`); never edit it by hand.
+- **Changelog:** `CHANGELOG.md` is written by release-please (`release.yml`, `release-please-config.json`, `.release-please-manifest.json`); never edit it by hand.
 - **README-First, README-Last:** read the nearest `README.md` before changing a directory and update it after. The root `README.md` carries the tool index (its Features table), so adding or renaming a script updates it in the same change.
 - **New scripts** use `set -euo pipefail`, a structured header comment (File/Description/Author/Version), colour-aware logging helpers, and get a row in the README tool index.
 - **Never:** suppress type errors (`as any`, `@ts-ignore`, `# type: ignore`), leave empty exception handlers, or hand-edit the vendored files (`tools/unwrap-prose.py`, `tools/docs_index.py`, `public/fleet-feedback*.js`).
 
 ## Retired tooling: don't re-add it
 
-`.github.sh` (a `.github/` structure generator) and `linting/` (`setup-lint-configs.sh`, `validate-lint-setup.sh`) were retired in favour of the hub's `tools/fanout.sh` kits: `--kit standardize` owns `.editorconfig`, `ci.yml` and agent context; `--kit prose` owns the markdown gate; `templates/release-pipeline/` owns release automation; `--kit deps-latest` owns the always-latest dependency policy, which is why nothing here should emit a `dependabot.yml`. Config distribution is registry-driven, additive-only and PR-based from the hub, never a local script walking hardcoded paths.
+`.github.sh` (a `.github/` structure generator) and `linting/` (`setup-lint-configs.sh`, `validate-lint-setup.sh`) were retired in favour of the hub's `tools/fanout.sh` kits: `--kit standardize` owns `.editorconfig`, `ci.yml` and agent context; `--kit prose` owns the markdown gate; `templates/release-pipeline/` owns release automation; `--kit deps-latest` owns the always-latest dependency policy, which is why the community kit's `.github/dependabot.yml` covers `github-actions` only: never add a package ecosystem to it. Config distribution is registry-driven, additive-only and PR-based from the hub, never a local script walking hardcoded paths.
 
 ## Fleet context
 

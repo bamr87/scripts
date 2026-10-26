@@ -18,68 +18,96 @@ repo: bamr87/scripts
 
 features:
   - id: SCRIPTS-001
-    title: "project-init.sh (project-wizard): scaffolding for Django,…"
-    description: "`project-init.sh` (`project-wizard`): scaffolding for Django, React, Node, Python, custom; optional Docker, CI, license, GitHub repo"
+    title: "Project initialization wizard"
+    description: "Scaffold a Django, React, Node, Python, or custom project — optionally with Docker, CI, a license, and a GitHub repo — interactively or from flags/env vars."
     implemented: true
     status: shipped
     prd: [TBD]
-    surface: infra
+    surface: cli
     link: "project-init.sh"
-    docs: "README.md"
+    docs: "README.md#project-initialization-wizard"
+    tags: [scaffolding]
+    tests: []
+    scenarios: []
+    evidence: []
   - id: SCRIPTS-002
-    title: "FORKME/forkme.sh (forkme): 10 fork/clone strategies"
-    description: "`FORKME/forkme.sh` (`forkme`): 10 fork/clone strategies"
+    title: "ForkMe repository forking/cloning"
+    description: "Fork or clone a GitHub repository with one of 10 strategies (full, shallow, sparse, filetype, analysis, mirror, …) instead of a plain git clone."
     implemented: true
     status: shipped
     prd: [TBD]
     surface: cli
     link: "FORKME/forkme.sh"
-    docs: "README.md"
+    docs: "FORKME/FORKME.md"
+    tags: [github]
+    tests: []
+    scenarios: []
+    evidence: []
   - id: SCRIPTS-003
-    title: "STASHME/stashme.sh (stashme): multi-repo cloud stash to…"
-    description: "`STASHME/stashme.sh` (`stashme`): multi-repo cloud stash to `stashme/…` branches with restore/cleanup"
+    title: "StashMe multi-repo cloud stash"
+    description: "Push uncommitted work across every repo under a directory tree to timestamped stashme/… remote branches, then list, restore, or clean them up."
     implemented: true
     status: shipped
     prd: [TBD]
     surface: cli
     link: "STASHME/stashme.sh"
-    docs: "README.md"
+    docs: "STASHME/STASHME.md"
+    tags: [multi-repo, backup]
+    tests: []
+    scenarios: []
+    evidence: []
   - id: SCRIPTS-004
-    title: "git_init.sh (git-init): git + GitHub repo creator"
-    description: "`git_init.sh` (`git-init`): git + GitHub repo creator"
+    title: "Git + GitHub repository creator"
+    description: "Create a local git repo and, optionally, its GitHub remote (gh first, npx degit for templates, gitignore.io for .gitignore), interactively or headless with --dry-run."
     implemented: true
     status: shipped
     prd: [TBD]
     surface: cli
     link: "git_init.sh"
-    docs: "README.md"
+    docs: "README.md#git-init"
+    tags: [github, scaffolding]
+    tests: []
+    scenarios: []
+    evidence: []
   - id: SCRIPTS-005
-    title: "rename-directory.sh (rename-dir): safe rename with…"
-    description: "`rename-directory.sh` (`rename-dir`): safe rename with git/Docker pre-flight and backup"
+    title: "Safe directory rename"
+    description: "Rename a directory after git-status and Docker-container pre-flight checks, with an optional backup and post-rename verification."
     implemented: true
     status: shipped
     prd: [TBD]
-    surface: infra
+    surface: cli
     link: "rename-directory.sh"
-    docs: "README.md"
+    docs: "RENAME-DIRECTORY-QUICK-REFERENCE.md"
+    tags: [filesystem]
+    tests: []
+    scenarios: []
+    evidence: []
   - id: SCRIPTS-006
-    title: "create_package.sh: Python package bootstrap"
-    description: "`create_package.sh`: Python package bootstrap"
+    title: "Python package bootstrap"
+    description: "Seed a new Python package repo under ~/github/<name> from microsoft/python-package-template, staged but not committed."
     implemented: true
     status: shipped
     prd: [TBD]
     surface: cli
     link: "create_package.sh"
-    docs: "README.md"
+    docs: "README.md#create-package"
+    tags: [scaffolding, python]
+    tests: []
+    scenarios: []
+    evidence: []
   - id: SCRIPTS-007
-    title: "tools/unwrap-prose.py: markdown unwrapper backing the…"
-    description: "`tools/unwrap-prose.py`: markdown unwrapper backing the `markdown-oneline` CI gate"
+    title: "Markdown prose unwrapper"
+    description: "Check or rewrite markdown so each paragraph is one line, leaving Liquid, code fences, and tables intact; backs the markdown-oneline CI gate."
     implemented: true
     status: shipped
     prd: [TBD]
-    surface: infra
+    surface: cli
     link: "tools/unwrap-prose.py"
-    docs: "README.md"
+    docs: "tools/README.md"
+    tags: [docs, lint]
+    tests: []
+    scenarios: []
+    evidence: []
   - id: SCRIPTS-008
     title: "install.sh standalone installer"
     description: "`install.sh` standalone installer (project-wizard only)"

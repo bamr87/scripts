@@ -193,10 +193,12 @@ The [docs index](docs/README.md) lists every document with a one-line summary: t
 | `docs/` | Docs index, decision log, the rename-directory quick reference |
 | `tools/` | Repo maintenance scripts (the prose gate and the docs index generator) |
 | `features/`, `verify/` | Feature index and verification scenarios |
+| `public/` | The fleet page-feedback widget (vendored) |
+| `.github/` | Workflows (hub-kit callers) and `sdlc.yml`, this repo's SDLC profile |
 
 ## ✅ Development
 
-There is no test suite: the gates are ShellCheck, the markdown one-paragraph-per-line rule and the docs index check, all in the [Quick start](#quick-start) block. In CI, [`markdown-oneline.yml`](.github/workflows/markdown-oneline.yml) enforces the prose rule and [`ci.yml`](.github/workflows/ci.yml) calls the hub's shared `standard-ci.yml`; ShellCheck runs locally. [`claude.yml`](.github/workflows/claude.yml) is the `@claude` handler. Conventions for new scripts, commits and branches live in [AGENTS.md](AGENTS.md).
+There is no test suite: the gates are ShellCheck, the markdown one-paragraph-per-line rule and the docs index check, all in the [Quick start](#quick-start) block. In CI, [`markdown-oneline.yml`](.github/workflows/markdown-oneline.yml) enforces the prose rule and [`ci.yml`](.github/workflows/ci.yml) calls the hub's shared `standard-ci.yml`; ShellCheck runs locally. [`claude.yml`](.github/workflows/claude.yml) is the `@claude` handler, and `conformance.yml`, `release.yml` (release-please) and `verify.yml` are likewise thin callers of hub workflows. Conventions for new scripts, commits and branches live in [AGENTS.md](AGENTS.md).
 
 ## Contributing
 
