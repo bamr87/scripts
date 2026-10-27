@@ -1,5 +1,7 @@
 # 🍴 ForkMe - Advanced GitHub Repository Forking Utility
 
+> ForkMe at a glance: what it does, its prerequisites, a quick start, and where each ForkMe document lives.
+
 Advanced command-line utility for flexible GitHub repository forking and cloning with 10 distinct strategies optimized for analysis, review, testing, and research.
 
 ## 📚 Documentation
@@ -7,7 +9,6 @@ Advanced command-line utility for flexible GitHub repository forking and cloning
 - **[FORKME.md](FORKME.md)** - Complete documentation with installation, strategies, examples, and best practices
 - **[FORKME-QUICK-REFERENCE.md](FORKME-QUICK-REFERENCE.md)** - Quick reference card for common commands
 - **[FORKME-EXAMPLES.md](FORKME-EXAMPLES.md)** - Real-world usage examples
-- **[FORKME-IMPLEMENTATION-SUMMARY.md](FORKME-IMPLEMENTATION-SUMMARY.md)** - Implementation details
 
 ## 🚀 Quick Start
 

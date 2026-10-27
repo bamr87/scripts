@@ -1,5 +1,7 @@
 # Security Policy
 
+> Which version is supported (the tip of main) and how to report a vulnerability privately.
+
 ## Supported versions
 
 This repository ships no packaged releases — every tool is a self-contained script run straight from a checkout. Only the tip of the default branch is supported; there are no maintained older branches or tags to backport a fix to. Update by pulling the default branch.
