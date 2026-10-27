@@ -17,7 +17,7 @@
 # - Environment: HOME must be set for the target user
 #
 # Usage:
-#   ./install.sh
+#   ./install.sh [-h|--help]
 #     Installs the Project Initialization Wizard under ~/.project-wizard,
 #     ensures project-init.sh is executable, and exposes a project-wizard
 #     command on your PATH (via ~/.local/bin).
@@ -44,6 +44,36 @@
 #   - Safe to re-run: directory creation, chmod, and symlink operations are idempotent
 
 set -e
+
+show_help() {
+    cat << EOF
+Usage: $(basename "$0") [-h|--help]
+
+Installs the Project Initialization Wizard for the current user:
+  - creates ~/.project-wizard/ (with templates/ and a copy of .env.example)
+  - makes project-init.sh executable
+  - symlinks it as ~/.local/bin/project-wizard (when ~/.local/bin exists)
+  - appends a PATH line to ~/.zshrc or ~/.bashrc (once)
+
+Takes no other options. If you have the bamr87/bamr87 hub checked out, run its
+./tools/setup.sh instead; it installs every tool in this repo.
+EOF
+}
+
+# Parse arguments before touching anything, so --help (or a typo) never installs.
+while [ $# -gt 0 ]; do
+    case $1 in
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        *)
+            echo "❌ Unknown option: $1" >&2
+            show_help >&2
+            exit 1
+            ;;
+    esac
+done
 
 echo "🚀 Installing Project Initialization Wizard..."
 

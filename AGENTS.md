@@ -15,9 +15,10 @@ Pure Bash 4+ plus one Python 3 script; nothing to install or build.
 ```bash
 # install: none; every tool runs from the checkout (./install.sh only puts project-wizard on PATH, see Installation)
 ./project-init.sh --help                                          # every tool prints its own flags with --help
-./git_init.sh --headless -n previewme --dry-run                   # smoke test, no side effects (there is no test suite)
+tests/smoke.sh                                                    # offline safety smoke (sandboxed HOME, stub gh); CI: smoke.yml
+./git_init.sh --headless -n previewme --dry-run                   # smoke test, no side effects
 ./STASHME/stashme.sh --dry-run                                    # smoke test, no side effects
-shellcheck --severity=warning *.sh FORKME/forkme.sh STASHME/stashme.sh   # lint (.shellcheckrc disables SC2034/SC2086/SC1091)
+shellcheck --severity=warning *.sh FORKME/forkme.sh STASHME/stashme.sh tests/*.sh   # lint (.shellcheckrc disables SC2034/SC2086/SC1091)
 python3 tools/unwrap-prose.py --check                             # markdown one-paragraph-per-line (fix with --write)
 python3 tools/docs_index.py --check                               # docs/README.md index is current (rebuild with --write)
 ```
@@ -33,6 +34,7 @@ python3 tools/docs_index.py --check                               # docs/README.
 | `STASHME/stashme.sh` | Multi-repo cloud stash to timestamped `stashme/…` branches, with `--dry-run`, `--restore`, `--cleanup`; docs in `STASHME/` |
 | `rename-directory.sh` | Safe directory rename with git/Docker pre-flight checks and optional backup ([quick reference](docs/rename-directory-quick-reference.md)) |
 | `create_package.sh` | Bootstraps a Python package repo from `microsoft/python-package-template` |
+| `tests/` | `smoke.sh`: the offline safety contract (side-effect-free `--help`, `CREATE_GITHUB_REPO` / `PUSH_TO_GITHUB` honored), run by `smoke.yml` |
 | `tools/` | `unwrap-prose.py` (vendored prose gate) and `docs_index.py` (vendored docs index generator) |
 | `docs/` | Docs index, ADRs (`docs/adr/`), guides |
 | `features/`, `verify/` | Feature index and the verify kit's scenarios (hub kit) |
@@ -63,7 +65,7 @@ Member of the bamr87 fleet, vendored as the `projects/scripts` submodule of the 
 
 - Shared CI (`ci.yml` → the hub's `standard-ci.yml`), the `@claude` handler (`claude.yml`), the prose gate (`markdown-oneline.yml`), conformance and verify callers, `.editorconfig` and `tools/unwrap-prose.py` are seeded from the hub's `templates/`; don't edit their logic here. Prefer adopting a hub kit over hand-rolling an equivalent.
 - The hub's bootstrap (`tools/setup.sh`) marks every `*.sh` here executable and symlinks the tools into `~/.local/bin` as `forkme`, `stashme`, `git-init`, `project-wizard`, `rename-dir` and `create-package`; `tools/devtools-env.sh` exports this checkout as `BAMR87_SCRIPTS`.
-- Neither the hub's `tools/run-all-tests.sh` nor the shared `standard-ci.yml` shellchecks this repo today, so run shellcheck yourself and keep every script clean.
+- Neither the hub's `tools/run-all-tests.sh` nor the shared `standard-ci.yml` shellchecks this repo; this repo's own `smoke.yml` does, and runs `tests/smoke.sh`. Keep every script clean, and never run a tool against your real `HOME` to test it: `install.sh` installs and `project-init.sh` can create a public repo.
 - The registry opts this repo into the weekly repo-evolution loop (`auto_evolve: true`), which opens draft improvement PRs here; the fleet-pulse doctor and the issue pipeline also open PRs, and none of them merges.
 
 ## Standard deviations

@@ -68,14 +68,19 @@ readonly CONFIG_FILE="${HOME}/.project-wizard/config"
 readonly TEMPLATES_DIR="${HOME}/.project-wizard/templates"
 readonly DEFAULT_GITHUB_DIR="${HOME}/github"
 readonly LOG_FILE="${HOME}/.project-wizard/wizard.log"
-
-# Initialize logging
-mkdir -p "$(dirname "$LOG_FILE")"
-exec 2> >(tee -a "$LOG_FILE" >&2)
+LOG_READY=false
 
 # ==============================================================================
 # 🔧 CORE UTILITY FUNCTIONS
 # ==============================================================================
+
+# Called from main() after argument parsing, so --help and a bad flag touch
+# nothing under $HOME.
+init_logging() {
+    mkdir -p "$(dirname "$LOG_FILE")"
+    exec 2> >(tee -a "$LOG_FILE" >&2)
+    LOG_READY=true
+}
 
 log() {
     local level=$1
@@ -92,8 +97,10 @@ log() {
         STEP)    echo -e "${CYAN}▶️  ${message}${RESET}" ;;
         *)       echo "$message" ;;
     esac
-    
-    echo "[$timestamp] [$level] $message" >> "$LOG_FILE"
+
+    if [ "$LOG_READY" = true ]; then
+        echo "[$timestamp] [$level] $message" >> "$LOG_FILE"
+    fi
 }
 
 error_exit() {
@@ -642,12 +649,25 @@ EOF
         LICENSE=$(select_option "Select a license:" "MIT" "Apache-2.0" "GPL-3.0" "None")
     fi
     
+    # GitHub Repository
+    : ${CREATE_GITHUB_REPO:=true}
+    : ${PUSH_TO_GITHUB:=true}
+    if [ -z "$NON_INTERACTIVE" ] || [ "$NON_INTERACTIVE" = false ]; then
+        local create_default="n"
+        [ "$CREATE_GITHUB_REPO" = true ] && create_default="y"
+        if prompt_yes_no "Create the GitHub repository?" "$create_default"; then
+            CREATE_GITHUB_REPO=true
+        else
+            CREATE_GITHUB_REPO=false
+        fi
+    fi
+
     # Private Repository
     : ${PRIVATE_REPO:=false}
-    if [ -z "$NON_INTERACTIVE" ] || [ "$NON_INTERACTIVE" = false ]; then
+    if [ "$CREATE_GITHUB_REPO" = true ] && { [ -z "$NON_INTERACTIVE" ] || [ "$NON_INTERACTIVE" = false ]; }; then
         prompt_yes_no "Make repository private?" "n" && PRIVATE_REPO=true
     fi
-    
+
     # Confirmation
     echo -e "\n${BOLD}${CYAN}📋 Configuration Summary${RESET}\n"
     echo "Project Type:     $PROJECT_TYPE"
@@ -658,6 +678,7 @@ EOF
     echo "License:          $LICENSE"
     echo "Docker:           $SETUP_DOCKER"
     echo "CI/CD:            $SETUP_CI"
+    echo "GitHub Repo:      $CREATE_GITHUB_REPO (push: $PUSH_TO_GITHUB)"
     echo "Private Repo:     $PRIVATE_REPO"
     echo ""
     
@@ -793,24 +814,38 @@ setup_git_and_github() {
     git add .
     git commit -m "🎉 Initial commit - Project initialized with wizard"
     
-    # Create GitHub repository
+    # Create GitHub repository. Only an explicit "true" reaches GitHub, so a
+    # typo'd value fails safe (local-only) rather than publishing.
+    if [ "$CREATE_GITHUB_REPO" != true ]; then
+        log INFO "Skipping GitHub repository creation (CREATE_GITHUB_REPO=$CREATE_GITHUB_REPO)"
+        return 0
+    fi
+
+    local push_flag=""
+    if [ "$PUSH_TO_GITHUB" = true ]; then push_flag="--push"; fi
+
     if check_command gh; then
         log STEP "Creating GitHub repository..."
-        
+
         if ! gh repo view "$GITHUB_USERNAME/$PROJECT_NAME" &>/dev/null; then
             local visibility="--public"
             if [ "$PRIVATE_REPO" = true ]; then visibility="--private"; fi
-            
+
             gh repo create "$GITHUB_USERNAME/$PROJECT_NAME" \
                 $visibility \
                 --description "$PROJECT_DESCRIPTION" \
                 --source=. \
                 --remote=origin \
-                --push || log WARNING "Failed to create GitHub repository"
+                $push_flag || log WARNING "Failed to create GitHub repository"
         else
             log INFO "Repository already exists on GitHub"
             git remote add origin "https://github.com/$GITHUB_USERNAME/$PROJECT_NAME.git" 2>/dev/null || true
-            git push -u origin main 2>/dev/null || git push -u origin master 2>/dev/null || true
+            if [ "$PUSH_TO_GITHUB" = true ]; then
+                git push -u origin main 2>/dev/null || git push -u origin master 2>/dev/null || true
+            fi
+        fi
+        if [ "$PUSH_TO_GITHUB" != true ]; then
+            log INFO "Not pushing (PUSH_TO_GITHUB=$PUSH_TO_GITHUB); push later with: git push -u origin main"
         fi
     else
         log WARNING "GitHub CLI not installed. Please create repository manually and run:"
@@ -837,7 +872,9 @@ EOF
     log SUCCESS "Your project is ready!"
     echo ""
     echo -e "${CYAN}📁 Project Location:${RESET} $PROJECT_DIR"
-    echo -e "${CYAN}🔗 GitHub URL:${RESET} https://github.com/$GITHUB_USERNAME/$PROJECT_NAME"
+    if [ "$CREATE_GITHUB_REPO" = true ]; then
+        echo -e "${CYAN}🔗 GitHub URL:${RESET} https://github.com/$GITHUB_USERNAME/$PROJECT_NAME"
+    fi
     echo ""
     echo -e "${BOLD}${CYAN}Next Steps:${RESET}"
     echo "  1. cd $PROJECT_DIR"
@@ -906,7 +943,9 @@ main() {
                 ;;
         esac
     done
-    
+
+    init_logging
+
     # Check for required tools
     log INFO "Checking system requirements..."
     check_command git || error_exit "Git is required but not installed"
@@ -926,6 +965,8 @@ main() {
         : ${SETUP_DOCKER:=false}
         : ${SETUP_CI:=false}
         : ${PRIVATE_REPO:=false}
+        : ${CREATE_GITHUB_REPO:=true}
+        : ${PUSH_TO_GITHUB:=true}
     fi
 
     # Fail before anything is created rather than scaffolding an empty repo
@@ -985,6 +1026,9 @@ ENVIRONMENT VARIABLES:
     SETUP_DOCKER          Setup Docker configuration (true/false)
     SETUP_CI              Setup CI/CD (true/false)
     PRIVATE_REPO          Make repository private (true/false)
+    CREATE_GITHUB_REPO    Create the GitHub repository with gh (true/false, default true;
+                          anything but "true" keeps the project local-only)
+    PUSH_TO_GITHUB        Push the initial commit to GitHub (true/false, default true)
 
 EXAMPLES:
     # Interactive mode
@@ -995,6 +1039,9 @@ EXAMPLES:
     
     # Specify project type and name
     $(basename "$0") --type react --name my-react-app
+
+    # Local-only scaffold: never touches GitHub
+    CREATE_GITHUB_REPO=false PROJECT_NAME=sandbox $(basename "$0") --non-interactive
 
 For more information, visit: https://github.com/bamr87/scripts
 
