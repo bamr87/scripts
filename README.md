@@ -101,10 +101,12 @@ To set your own defaults, copy [`.env.example`](.env.example) and either pass it
 | `GITHUB_USERNAME` / `GITHUB_EMAIL` | Your GitHub handle and email | Default to `git config user.name` / `user.email` |
 | `LICENSE` | License type | `MIT`, `Apache-2.0`, `GPL-3.0`, `None` |
 | `PRIVATE_REPO` | Create the GitHub repo as private | `true`, `false` |
+| `CREATE_GITHUB_REPO` | Create the GitHub repo with `gh`; anything but `true` keeps the project local-only | `true` (default), `false` |
+| `PUSH_TO_GITHUB` | Push the initial commit to GitHub | `true` (default), `false` |
 | `SETUP_DOCKER` | Create Docker configuration | `true`, `false` |
 | `SETUP_CI` | Set up GitHub Actions | `true`, `false` |
 
-`./project-init.sh --help` prints the full option list. The wizard logs to `~/.project-wizard/wizard.log`.
+`./project-init.sh --help` prints the full option list without writing anything. A run logs to `~/.project-wizard/wizard.log`.
 
 ### ForkMe
 

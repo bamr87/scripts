@@ -1,0 +1,28 @@
+name: smoke
+
+# The toolbelt's safety contract, offline: shellcheck every script, then
+# tests/smoke.sh (side-effect-free --help, install.sh refusing unknown options,
+# project-init.sh honoring CREATE_GITHUB_REPO / PUSH_TO_GITHUB). The shared
+# standard-ci.yml shellchecks nothing here, so this is the repo's own gate.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: shellcheck
+        run: shellcheck --severity=warning *.sh FORKME/forkme.sh STASHME/stashme.sh tests/*.sh
+      - name: smoke
+        run: tests/smoke.sh
