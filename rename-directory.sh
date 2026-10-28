@@ -130,8 +130,11 @@ TARGET_DIR="$2"
 SOURCE_DIR="${SOURCE_DIR/#\~/$HOME}"
 TARGET_DIR="${TARGET_DIR/#\~/$HOME}"
 
-# Get absolute paths
-SOURCE_DIR=$(cd "$(dirname "$SOURCE_DIR")" 2>/dev/null && pwd)/$(basename "$SOURCE_DIR") || SOURCE_DIR="$1"
+# Get absolute paths (left as given if the parent is missing; the
+# pre-flight check below then reports the path the user actually typed)
+if SOURCE_PARENT=$(cd "$(dirname "$SOURCE_DIR")" 2>/dev/null && pwd); then
+    SOURCE_DIR="${SOURCE_PARENT%/}/$(basename "$SOURCE_DIR")"
+fi
 TARGET_DIR_PARENT=$(dirname "$TARGET_DIR")
 TARGET_DIR_NAME=$(basename "$TARGET_DIR")
 
@@ -172,6 +175,11 @@ if [ ! -d "$TARGET_DIR_PARENT" ]; then
     exit 1
 fi
 log_success "Target parent directory exists"
+
+# Make the target absolute now: the git checks below cd into the source, so a
+# relative target would otherwise resolve inside it and the mv would fail.
+TARGET_DIR_PARENT=$(cd "$TARGET_DIR_PARENT" && pwd)
+TARGET_DIR="${TARGET_DIR_PARENT%/}/${TARGET_DIR_NAME}"
 
 # Check write permissions
 log_step "Checking permissions..."
@@ -272,9 +280,7 @@ if [ "$CREATE_BACKUP" = "yes" ]; then
     log_info "Directory size: $DIR_SIZE"
     log_info "This may take a few moments..."
     
-    cp -R "$SOURCE_DIR" "$BACKUP_DIR"
-    
-    if [ $? -eq 0 ]; then
+    if cp -R "$SOURCE_DIR" "$BACKUP_DIR"; then
         log_success "Backup created successfully"
         log_info "Backup location: $BACKUP_DIR"
     else
@@ -298,9 +304,7 @@ log_info "To:   $TARGET_DIR"
 echo ""
 
 # Perform the rename
-mv "$SOURCE_DIR" "$TARGET_DIR"
-
-if [ $? -eq 0 ]; then
+if mv "$SOURCE_DIR" "$TARGET_DIR"; then
     log_success "Directory renamed successfully!"
 else
     log_error "Failed to rename directory"

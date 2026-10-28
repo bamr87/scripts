@@ -36,8 +36,10 @@
 #     which the hub does not create.
 #
 #   ENV NOTES:
-#     - For zsh users on macOS, PATH is appended to ~/.zshrc
-#     - For bash users, PATH is appended to ~/.bashrc
+#     - The rc file is chosen from your login shell ($SHELL):
+#     - zsh (the macOS default) -> PATH is appended to ~/.zshrc
+#     - bash -> PATH is appended to ~/.bashrc
+#     - any other shell -> nothing is appended; add ~/.local/bin to PATH yourself
 #
 # Design Notes:
 #   - Follows "Design for Failure" by exiting on first error with clear logging
@@ -90,19 +92,20 @@ echo "🔧 Setting permissions..."
 chmod +x "$SCRIPT_DIR/project-init.sh"
 
 # Create or refresh symlink in user's local bin for CLI access
-if [ -d "$HOME/.local/bin" ]; then
-    echo "🔗 Creating symlink in ~/.local/bin..."
-    ln -sf "$SCRIPT_DIR/project-init.sh" "$HOME/.local/bin/project-wizard"
-    echo "✅ Symlink created at ~/.local/bin/project-wizard"
-fi
+# (create ~/.local/bin first: it does not exist on a fresh account)
+echo "🔗 Creating symlink in ~/.local/bin..."
+mkdir -p "$HOME/.local/bin"
+ln -sf "$SCRIPT_DIR/project-init.sh" "$HOME/.local/bin/project-wizard"
+echo "✅ Symlink created at ~/.local/bin/project-wizard"
 
-# Detect shell and update configuration so project-wizard is available on new shells
+# Detect the user's login shell and update its rc file so project-wizard is
+# available on new shells. This script always runs under bash (shebang), so
+# $ZSH_VERSION/$BASH_VERSION would describe the installer, not the user.
 SHELL_CONFIG=""
-if [ -n "$ZSH_VERSION" ]; then
-    SHELL_CONFIG="$HOME/.zshrc"
-elif [ -n "$BASH_VERSION" ]; then
-    SHELL_CONFIG="$HOME/.bashrc"
-fi
+case "$(basename "${SHELL:-}")" in
+    zsh)  SHELL_CONFIG="$HOME/.zshrc" ;;
+    bash) SHELL_CONFIG="$HOME/.bashrc" ;;
+esac
 
 if [ -n "$SHELL_CONFIG" ]; then
     # Check if PATH update is needed for this shell RC file
@@ -118,6 +121,8 @@ EOF
     else
         echo "✅ Shell configuration already updated"
     fi
+else
+    echo "⚠️  Unrecognised login shell '${SHELL:-unset}': add \$HOME/.local/bin to your PATH manually"
 fi
 
 # Copy example configuration for users to customize defaults
@@ -131,7 +136,7 @@ echo ""
 echo "✨ Installation complete!"
 echo ""
 echo "🎯 Quick Start:"
-echo "   1. Run 'source $SHELL_CONFIG' to update your PATH (if needed)"
+echo "   1. Run 'source ${SHELL_CONFIG:-<your shell rc file>}' to update your PATH (if needed)"
 echo "   2. Run 'project-wizard' from anywhere to start the wizard"
 echo "   3. Or run '${SCRIPT_DIR}/project-init.sh' directly"
 echo ""
