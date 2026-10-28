@@ -1,5 +1,36 @@
 # Changelog
 
+## [0.2.0](https://github.com/bamr87/scripts/compare/v0.1.0...v0.2.0) (2026-10-28)
+
+
+### Added
+
+* Enhance project initialization scripts with improved documentation and functionality ([5a3ce42](https://github.com/bamr87/scripts/commit/5a3ce4291d257263e67e8659b39b8c9d6b0b8aed))
+* **forkme:** add interactive batch mode for repo listing and cloning ([c428d63](https://github.com/bamr87/scripts/commit/c428d63370eff0f4b3cf6afe50ec4d58a9a4f30b))
+* Introduce IT-Journey Scripts Collection with project initialization and repository management utilities ([71a2a68](https://github.com/bamr87/scripts/commit/71a2a68226df3ead9b9c261b7159c9e27242c5c0))
+* **STASHME:** Add multi-repository cloud stash utility ([1acd81d](https://github.com/bamr87/scripts/commit/1acd81dc2b63941767051e44b62958c340f51c54))
+* Update ForkMe to version 1.0.1 with critical bug fixes and enhancements ([fecf16b](https://github.com/bamr87/scripts/commit/fecf16b07f6f8a75a8ab52783b6ef7cc062e018c))
+
+
+### Fixed
+
+* git_init.sh runs where USER is unset ([581b5d4](https://github.com/bamr87/scripts/commit/581b5d4c0906af6d5f410dfdffbb235d765fe3ef))
+* git_init.sh runs where USER is unset (containers, cron, some CI runners) ([570d1af](https://github.com/bamr87/scripts/commit/570d1af8d370c66e2c7fbfa4bb5b5491323f721a))
+* **project-init:** honor CREATE_GITHUB_REPO and PUSH_TO_GITHUB; make --help side-effect free ([a96288f](https://github.com/bamr87/scripts/commit/a96288f1cc87e58046dde9985d88e505ccd129e0))
+* **project-init:** honor CREATE_GITHUB_REPO and PUSH_TO_GITHUB; make --help side-effect free ([bb18108](https://github.com/bamr87/scripts/commit/bb1810843625048442a72f7b71cb2b6943af2875))
+
+
+### Documentation
+
+* add feature catalog, constitution and amendments; link PRD ([#21](https://github.com/bamr87/scripts/issues/21)) ([0d786b9](https://github.com/bamr87/scripts/commit/0d786b9ae583122b074115645bac011e55802f45))
+* add PRD.md ([#20](https://github.com/bamr87/scripts/issues/20)) ([14ba95c](https://github.com/bamr87/scripts/commit/14ba95c53d745ae6ede02fdd9e3f338b3bb50c63))
+* **changelog:** add CHANGELOG.md in Keep a Changelog format ([#16](https://github.com/bamr87/scripts/issues/16)) ([f4f1f06](https://github.com/bamr87/scripts/commit/f4f1f06aac1fc4f2dfaca4185eea2ab0997593e6))
+* fill CLAUDE.md scaffold (utility inventory, shellcheck gate, hub reuse) ([#7](https://github.com/bamr87/scripts/issues/7)) ([cd5cc53](https://github.com/bamr87/scripts/commit/cd5cc53b363535d2196a30ee561f18deb3a5a1a2))
+* harmonize documentation to the fleet docs framework ([56777db](https://github.com/bamr87/scripts/commit/56777dbb907653a41203faeefda5ce2fbaa4d949))
+* **readme:** align README with the portfolio standard ([#15](https://github.com/bamr87/scripts/issues/15)) ([69b7ce2](https://github.com/bamr87/scripts/commit/69b7ce299ee89def1c128d915e9a06cbad95cca3))
+
+## Changelog
+
 All notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Unreleased
