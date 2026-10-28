@@ -44,9 +44,9 @@ sandboxed() {
     HOME="$home" PATH="$WORK/bin:$PATH" GIT_CONFIG_GLOBAL=/dev/null "$@" </dev/null >"$WORK/out.txt" 2>&1
 }
 
-# 1. --help exits 0 and writes nothing under HOME.
+# 1. --help exits 0 and writes nothing under HOME, even where USER is unset (containers, cron).
 for script in project-init.sh install.sh git_init.sh FORKME/forkme.sh STASHME/stashme.sh rename-directory.sh create_package.sh; do
-    rc=0; sandboxed "$WORK/home" bash "$REPO/$script" --help || rc=$?
+    rc=0; sandboxed "$WORK/home" env -u USER bash "$REPO/$script" --help || rc=$?
     wrote="$(find "$WORK/home" -mindepth 1 | sed "s#$WORK/home#~#" | tr '\n' ' ')"
     if [ "$rc" -ne 0 ]; then fail "$script --help exited $rc"
     elif [ -n "$wrote" ]; then fail "$script --help wrote: $wrote"

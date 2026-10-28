@@ -4,7 +4,8 @@
 set -euo pipefail
 
 # --- helpers and defaults
-GITHUB_USER="${GITHUB_USER:-$USER}"
+# USER is unset in containers, cron and some CI runners; under set -u that would abort even --help.
+GITHUB_USER="${GITHUB_USER:-${USER:-$(id -un)}}"
 DEFAULT_BRANCH="main"
 DRY_RUN=false
 MODE="interactive"
