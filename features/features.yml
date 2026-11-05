@@ -77,7 +77,7 @@ features:
     prd: [TBD]
     surface: cli
     link: "rename-directory.sh"
-    docs: "RENAME-DIRECTORY-QUICK-REFERENCE.md"
+    docs: "docs/rename-directory-quick-reference.md"
     tags: [filesystem]
     tests: []
     scenarios: []
