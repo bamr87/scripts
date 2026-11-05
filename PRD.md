@@ -49,16 +49,20 @@ Every user-facing capability has a stable id in the feature catalog [`features/f
 | [SCRIPTS-002](features/features.yml) | ForkMe repository forking/cloning | shipped | [`FORKME/forkme.sh`](FORKME/forkme.sh) · [`FORKME/FORKME.md`](FORKME/FORKME.md) | TBD |
 | [SCRIPTS-003](features/features.yml) | StashMe multi-repo cloud stash | shipped | [`STASHME/stashme.sh`](STASHME/stashme.sh) · [`STASHME/STASHME.md`](STASHME/STASHME.md) | TBD |
 | [SCRIPTS-004](features/features.yml) | Git + GitHub repository creator | shipped | [`git_init.sh`](git_init.sh) · `README.md#git-init` | TBD |
-| [SCRIPTS-005](features/features.yml) | Safe directory rename | shipped | [`rename-directory.sh`](rename-directory.sh) · [`RENAME-DIRECTORY-QUICK-REFERENCE.md`](RENAME-DIRECTORY-QUICK-REFERENCE.md) | TBD |
+| [SCRIPTS-005](features/features.yml) | Safe directory rename | shipped | [`rename-directory.sh`](rename-directory.sh) · `RENAME-DIRECTORY-QUICK-REFERENCE.md` | TBD |
 | [SCRIPTS-006](features/features.yml) | Python package bootstrap | shipped | [`create_package.sh`](create_package.sh) · `README.md#create-package` | TBD |
 | [SCRIPTS-007](features/features.yml) | Markdown prose unwrapper | shipped | [`tools/unwrap-prose.py`](tools/unwrap-prose.py) · [`tools/README.md`](tools/README.md) | TBD |
 | [SCRIPTS-008](features/features.yml) | install.sh standalone installer | shipped | [`install.sh`](install.sh) · [`README.md`](README.md) | TBD |
+| [SCRIPTS-009](features/features.yml) | install.sh --uninstall | planned | [`install.sh`](install.sh) · [`README.md`](README.md) | FR4 |
+| [SCRIPTS-010](features/features.yml) | Shell completions for the toolbelt | planned | `completions/` · [`README.md`](README.md) | FR5 |
 
 **Requirement → feature trace**
 
 | Requirement | Features |
 | --- | --- |
 | TBD | SCRIPTS-001, SCRIPTS-002, SCRIPTS-003, SCRIPTS-004, SCRIPTS-005, SCRIPTS-006, SCRIPTS-007, SCRIPTS-008 |
+| FR4 | SCRIPTS-009 |
+| FR5 | SCRIPTS-010 |
 <!-- features:end -->
 
 ## 5. Requirements
@@ -68,6 +72,8 @@ Every user-facing capability has a stable id in the feature catalog [`features/f
 - FR1: Each script supports `--help`
 - FR2: Wizard supports env-var/flag/`--config` non-interactive mode
 - FR3: Destructive tools offer dry-run and/or backup
+- FR4: `install.sh --uninstall` reverses every install side effect (planned, #34)
+- FR5: Bash/zsh completions for forkme, stashme, and git-init (planned, #35)
 
 **Non-functional**
 
