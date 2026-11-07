@@ -53,12 +53,16 @@ Every user-facing capability has a stable id in the feature catalog [`features/f
 | [SCRIPTS-006](features/features.yml) | Python package bootstrap | shipped | [`create_package.sh`](create_package.sh) · `README.md#create-package` | TBD |
 | [SCRIPTS-007](features/features.yml) | Markdown prose unwrapper | shipped | [`tools/unwrap-prose.py`](tools/unwrap-prose.py) · [`tools/README.md`](tools/README.md) | TBD |
 | [SCRIPTS-008](features/features.yml) | install.sh standalone installer | shipped | [`install.sh`](install.sh) · [`README.md`](README.md) | TBD |
+| [SCRIPTS-009](features/features.yml) | install.sh --uninstall | planned | [`install.sh`](install.sh) · [`README.md`](README.md) | FR4 |
+| [SCRIPTS-010](features/features.yml) | Shell completions for the toolbelt | planned | `completions/` · [`README.md`](README.md) | FR5 |
 
 **Requirement → feature trace**
 
 | Requirement | Features |
 | --- | --- |
 | TBD | SCRIPTS-001, SCRIPTS-002, SCRIPTS-003, SCRIPTS-004, SCRIPTS-005, SCRIPTS-006, SCRIPTS-007, SCRIPTS-008 |
+| FR4 | SCRIPTS-009 |
+| FR5 | SCRIPTS-010 |
 <!-- features:end -->
 
 ## 5. Requirements
@@ -68,6 +72,8 @@ Every user-facing capability has a stable id in the feature catalog [`features/f
 - FR1: Each script supports `--help`
 - FR2: Wizard supports env-var/flag/`--config` non-interactive mode
 - FR3: Destructive tools offer dry-run and/or backup
+- FR4: `install.sh --uninstall` reverses every install side effect (planned, #34)
+- FR5: Bash/zsh completions for forkme, stashme, and git-init (planned, #35)
 
 **Non-functional**
 

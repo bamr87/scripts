@@ -117,3 +117,29 @@ features:
     surface: cli
     link: "install.sh"
     docs: "README.md"
+  - id: SCRIPTS-009
+    title: "install.sh --uninstall"
+    description: "Reverse install.sh: remove the project-wizard symlink (only if it points into this checkout), the PATH rc block (with .bak), and optionally ~/.project-wizard; supports --dry-run. Issue #34."
+    implemented: false
+    status: planned
+    prd: [FR4]
+    surface: cli
+    link: "install.sh"
+    docs: "README.md"
+    tags: [install]
+    tests: []
+    scenarios: []
+    evidence: []
+  - id: SCRIPTS-010
+    title: "Shell completions for the toolbelt"
+    description: "Bash/zsh completions for forkme, stashme, and git-init, with a smoke check that every long flag in --help is completed. Issue #35."
+    implemented: false
+    status: planned
+    prd: [FR5]
+    surface: cli
+    link: "completions/"
+    docs: "README.md"
+    tags: [dx, completions]
+    tests: []
+    scenarios: []
+    evidence: []
