@@ -4,7 +4,9 @@
 # Description: Offline regression smoke for the toolbelt's safety contract:
 #              every --help is side-effect free, install.sh refuses unknown
 #              options, and project-init.sh honors CREATE_GITHUB_REPO and
-#              PUSH_TO_GITHUB. Runs in a throwaway HOME with a recording `gh`
+#              PUSH_TO_GITHUB, and user input (prompt answers, .env and
+#              --config files, --file-types, --max-depth, repo names) is
+#              data that never runs. Runs in a throwaway HOME with a recording `gh`
 #              stub, so nothing reaches GitHub or the caller's dotfiles.
 # Author: Amr Abdel-Motaleb <amr.abdel@gmail.com>
 # Created: 2026-10-27
@@ -83,5 +85,71 @@ rc=0; scaffold default-push || rc=$?
 create_call="$(grep "repo create" "$WORK/gh-calls.log" || true)"
 if [ "$rc" -eq 0 ] && [[ "$create_call" == *--public*--push* ]]; then pass "defaults still create a public repo and push"
 else fail "default scaffold (exit $rc) called: ${create_call:-nothing}"; fi
+
+# 4. Input is data, never shell (issue #29): prompt answers, ./.env and
+#    --config files, --file-types, --max-depth and repo names never run a
+#    command or add a find primary. $SANDBOX is where an injection would land.
+SANDBOX="$WORK/inject"
+export SANDBOX
+reset_sandbox() { rm -rf "$SANDBOX"; mkdir -p "$SANDBOX"; }
+
+# Feed one answer to project-init.sh's prompt_user and print what it stored.
+prompt_value() {
+    printf '%s\n' "$1" | HOME="$WORK/home" bash -c \
+        'source "$1"; prompt_user "Question" "" ANSWER >/dev/null 2>&1; printf "%s" "$ANSWER"' _ "$REPO/project-init.sh"
+}
+
+reset_sandbox
+# shellcheck disable=SC2016  # the $SANDBOX in the answer is the payload, expanded only if eval'd
+injection='x'"'"'; touch "$SANDBOX/PWNED"; echo '"'"
+got="$(prompt_value "$injection" || true)"
+if [ -e "$SANDBOX/PWNED" ]; then fail "prompt_user executed its input"
+elif [ "$got" != "$injection" ]; then fail "prompt_user stored [$got], expected the input verbatim"
+else pass "prompt_user stores an injection attempt verbatim without running it"; fi
+
+got="$(prompt_value "O'Brien's app" || true)"
+if [ "$got" = "O'Brien's app" ]; then pass "prompt_user keeps apostrophes"
+else fail "prompt_user stored [$got] for O'Brien's app"; fi
+
+# Interactive mode reads ./.env: run the wizard from a directory whose .env
+# carries a command substitution, then decline at the final confirmation.
+reset_sandbox
+mkdir -p "$WORK/envdir"
+# shellcheck disable=SC2016  # literal payload
+printf '%s\n' 'NON_INTERACTIVE=true' 'PROJECT_TYPE=custom' 'PROJECT_NAME=$(touch "$SANDBOX/PWNED")' > "$WORK/envdir/.env"
+rc=0
+(cd "$WORK/envdir" && printf '\n\n\n\n\nn\n' | HOME="$WORK/home" GIT_CONFIG_GLOBAL=/dev/null bash -c \
+    'source "$1"; clear() { :; }; run_wizard' _ "$REPO/project-init.sh" >"$WORK/out.txt" 2>&1) || rc=$?
+if [ -e "$SANDBOX/PWNED" ]; then fail "./.env was executed as shell"
+elif ! grep -qF 'Project Name:     $(touch "$SANDBOX/PWNED")' "$WORK/out.txt"; then fail "./.env value not taken literally (exit $rc): $(grep 'Project Name' "$WORK/out.txt" || tail -3 "$WORK/out.txt")"
+else pass "./.env is parsed as KEY=VALUE, never executed"; fi
+
+reset_sandbox
+# shellcheck disable=SC2016  # literal payload
+printf '%s\n' 'CREATE_GITHUB_REPO=false' 'PROJECT_DESCRIPTION=$(touch "$SANDBOX/PWNED")' 'PATH=/nonexistent' > "$WORK/config.env"
+rc=0; sandboxed "$WORK/home" env NON_INTERACTIVE=true PROJECT_TYPE=custom PROJECT_NAME=configured \
+    PROJECT_DIR="$WORK/projects/configured" GITHUB_USERNAME=smoke GITHUB_EMAIL=smoke@example.invalid \
+    bash "$REPO/project-init.sh" --config "$WORK/config.env" --non-interactive || rc=$?
+if [ -e "$SANDBOX/PWNED" ]; then fail "--config file was executed as shell"
+elif [ "$rc" -ne 0 ]; then fail "--config scaffold exited $rc: $(tail -3 "$WORK/out.txt")"
+else pass "--config is parsed as data and ignores keys like PATH"; fi
+
+reset_sandbox
+rc=0; sandboxed "$WORK/home" bash "$REPO/FORKME/forkme.sh" --dry-run --no-fork --strategy filetype \
+    --file-types 'md" -o -name "*' owner/repo || rc=$?
+if [ "$rc" -ne 0 ] && grep -q "Invalid --file-types" "$WORK/out.txt"; then pass "forkme rejects a --file-types entry that is not a plain extension"
+else fail "forkme accepted a crafted --file-types (exit $rc): $(tail -2 "$WORK/out.txt")"; fi
+
+mkdir -p "$WORK/stash-empty"
+rc=0; sandboxed "$WORK/home" bash "$REPO/STASHME/stashme.sh" --dry-run -d "$WORK/stash-empty" \
+    --max-depth '1 -exec touch '"$SANDBOX"'/PWNED \;' || rc=$?
+if [ -e "$SANDBOX/PWNED" ]; then fail "stashme --max-depth injected a find primary"
+elif [ "$rc" -ne 0 ] && grep -q "Invalid --max-depth" "$WORK/out.txt"; then pass "stashme rejects a non-integer --max-depth"
+else fail "stashme accepted a crafted --max-depth (exit $rc): $(tail -2 "$WORK/out.txt")"; fi
+
+rc=0; sandboxed "$WORK/home" env GITHUB_USER=smoke bash "$REPO/git_init.sh" --headless -n "it's-a-test" --dry-run || rc=$?
+expected="DRYRUN: mkdir -p $(printf '%q' "$WORK/home/github/it's-a-test")"
+if [ "$rc" -eq 0 ] && grep -qF "$expected" "$WORK/out.txt"; then pass "git_init --dry-run prints printf %q-quoted commands"
+else fail "git_init --dry-run (exit $rc) did not print [$expected]: $(grep DRYRUN "$WORK/out.txt" | head -2)"; fi
 
 exit "$FAILED"

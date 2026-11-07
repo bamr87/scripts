@@ -34,7 +34,7 @@ python3 tools/docs_index.py --check                               # docs/README.
 | `STASHME/stashme.sh` | Multi-repo cloud stash to timestamped `stashme/…` branches, with `--dry-run`, `--restore`, `--cleanup`; docs in `STASHME/` |
 | `rename-directory.sh` | Safe directory rename with git/Docker pre-flight checks and optional backup ([quick reference](docs/rename-directory-quick-reference.md)) |
 | `create_package.sh` | Bootstraps a Python package repo from `microsoft/python-package-template` |
-| `tests/` | `smoke.sh`: the offline safety contract (side-effect-free `--help`, `CREATE_GITHUB_REPO` / `PUSH_TO_GITHUB` honored), run by `smoke.yml` |
+| `tests/` | `smoke.sh`: the offline safety contract (side-effect-free `--help`, `CREATE_GITHUB_REPO` / `PUSH_TO_GITHUB` honored, input treated as data and never `eval`ed or sourced), run by `smoke.yml` |
 | `tools/` | `unwrap-prose.py` (vendored prose gate) and `docs_index.py` (vendored docs index generator) |
 | `docs/` | Docs index, ADRs (`docs/adr/`), guides |
 | `features/`, `verify/` | Feature index and the verify kit's scenarios (hub kit) |
