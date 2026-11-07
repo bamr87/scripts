@@ -90,7 +90,7 @@ PROJECT_TYPE=django PROJECT_NAME=my-api SETUP_DOCKER=true SETUP_CI=true \
 ./project-init.sh --type react --name my-react-app --dir ~/projects/my-react-app
 ```
 
-To set your own defaults, copy [`.env.example`](.env.example) and either pass it with `--config FILE` (any mode; it is applied where it appears, so put it first and let later flags override it) or save it as `.env` in the directory you run the wizard from (interactive mode only; a `.env` overrides flags and `--config`). Only the variables below are read; the rest of `.env.example` is reserved and currently ignored. An unsupported `PROJECT_TYPE` stops the wizard before anything is created. Key options:
+To set your own defaults, copy [`.env.example`](.env.example) and either pass it with `--config FILE` (any mode; it is applied where it appears, so put it first and let later flags override it) or save it as `.env` in the directory you run the wizard from (interactive mode only; a `.env` overrides flags and `--config`). Only the variables below are read; the rest of `.env.example` is reserved and currently ignored. Both files are parsed as `KEY=VALUE` lines (optional `export `, `#` comments, matching quotes, a leading `~/` for `$HOME`), never sourced: `$(...)`, backticks and `$VAR` stay literal, so running the wizard inside an untrusted checkout cannot execute its `.env`. Prompt answers are stored verbatim too, apostrophes included. An unsupported `PROJECT_TYPE` stops the wizard before anything is created. Key options:
 
 | Variable | Description | Options |
 | --- | --- | --- |
@@ -126,6 +126,8 @@ Forking and cloning strategies that go beyond `git clone` — shallow and sparse
 ./forkme.sh --analyze-only owner/repo
 ```
 
+Each `--file-types` entry must be a plain extension (letters and digits, comma-separated); anything else exits non-zero before cloning, because the list builds a `find … -delete` expression.
+
 → [Full ForkMe documentation](FORKME/FORKME.md) · [Quick reference](FORKME/FORKME-QUICK-REFERENCE.md)
 
 ### StashMe
@@ -142,6 +144,8 @@ Saves uncommitted changes across every git repo under a directory tree to timest
 ./STASHME/stashme.sh --cleanup                          # remove old stashme branches
 ```
 
+`--max-depth` must be a non-negative integer; anything else exits non-zero before the search runs.
+
 → [Full StashMe documentation](STASHME/STASHME.md) · [Quick reference](STASHME/STASHME-QUICK-REFERENCE.md)
 
 ### Git Init
@@ -155,6 +159,8 @@ Creates a git repo (and optionally the GitHub remote) in interactive or headless
 ./git_init.sh --headless -n localrepo --no-push
 ./git_init.sh --headless -n previewme --dry-run                 # preview only
 ```
+
+`--dry-run` prints each command shell-quoted (`printf %q`), so a name such as `it's-a-test` shows exactly the argument that would be passed.
 
 ### Rename Directory
 
