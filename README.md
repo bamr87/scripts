@@ -38,9 +38,10 @@ Then, from the checkout:
 ```bash
 # install: none; every tool runs from the checkout (./install.sh only puts project-wizard on PATH, see Installation)
 ./project-init.sh --help                                          # every tool prints its own flags with --help
-./git_init.sh --headless -n previewme --dry-run                   # smoke test, no side effects (there is no test suite)
+tests/smoke.sh                                                    # offline safety smoke (sandboxed HOME, stub gh); CI: smoke.yml
+./git_init.sh --headless -n previewme --dry-run                   # smoke test, no side effects
 ./STASHME/stashme.sh --dry-run                                    # smoke test, no side effects
-shellcheck --severity=warning *.sh FORKME/forkme.sh STASHME/stashme.sh   # lint (.shellcheckrc disables SC2034/SC2086/SC1091)
+shellcheck --severity=warning *.sh FORKME/forkme.sh STASHME/stashme.sh tests/*.sh   # lint (.shellcheckrc disables SC2034/SC2086/SC1091)
 python3 tools/unwrap-prose.py --check                             # markdown one-paragraph-per-line (fix with --write)
 python3 tools/docs_index.py --check                               # docs/README.md index is current (rebuild with --write)
 ```
@@ -193,6 +194,7 @@ The [docs index](docs/README.md) lists every document with a one-line summary: t
 | `*.sh` (root) | The tools themselves (`forkme.sh` is a symlink to `FORKME/forkme.sh`); see [Features](#-features) |
 | `FORKME/`, `STASHME/` | ForkMe and StashMe, each with its own guide, quick reference and examples |
 | `docs/` | Docs index, decision log, the rename-directory quick reference |
+| `tests/` | `smoke.sh`, the offline safety smoke run by `smoke.yml` |
 | `tools/` | Repo maintenance scripts (the prose gate and the docs index generator) |
 | `features/`, `verify/` | Feature index and verification scenarios |
 | `public/` | The fleet page-feedback widget (vendored) |
@@ -200,7 +202,7 @@ The [docs index](docs/README.md) lists every document with a one-line summary: t
 
 ## ✅ Development
 
-There is no test suite: the gates are ShellCheck, the markdown one-paragraph-per-line rule and the docs index check, all in the [Quick start](#quick-start) block. In CI, [`markdown-oneline.yml`](.github/workflows/markdown-oneline.yml) enforces the prose rule and [`ci.yml`](.github/workflows/ci.yml) calls the hub's shared `standard-ci.yml`; ShellCheck runs locally. [`claude.yml`](.github/workflows/claude.yml) is the `@claude` handler, and `conformance.yml`, `release.yml` (release-please) and `verify.yml` are likewise thin callers of hub workflows. Conventions for new scripts, commits and branches live in [AGENTS.md](AGENTS.md).
+The gates are ShellCheck, the offline smoke test [`tests/smoke.sh`](tests/smoke.sh) (side-effect-free `--help` for every tool, `CREATE_GITHUB_REPO` / `PUSH_TO_GITHUB` honored, run against a sandboxed `HOME` and a stub `gh`), the markdown one-paragraph-per-line rule and the docs index check, all in the [Quick start](#quick-start) block. In CI, [`smoke.yml`](.github/workflows/smoke.yml) runs ShellCheck and the smoke test (the hub's shared `standard-ci.yml` shellchecks nothing here), [`markdown-oneline.yml`](.github/workflows/markdown-oneline.yml) enforces the prose rule and [`ci.yml`](.github/workflows/ci.yml) calls the hub's shared `standard-ci.yml`. [`claude.yml`](.github/workflows/claude.yml) is the `@claude` handler, and `conformance.yml`, `release.yml` (release-please) and `verify.yml` are likewise thin callers of hub workflows. Conventions for new scripts, commits and branches live in [AGENTS.md](AGENTS.md).
 
 ## Contributing
 
