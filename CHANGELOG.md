@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/bamr87/scripts/compare/v0.2.0...v0.2.1) (2026-11-12)
+
+
+### Documentation
+
+* **features:** fix SCRIPTS-005 docs path ([ddab381](https://github.com/bamr87/scripts/commit/ddab381eab5a6708203648b1397febdeb20e8e66))
+
 ## [0.2.0](https://github.com/bamr87/scripts/compare/v0.1.0...v0.2.0) (2026-11-07)
 
 
