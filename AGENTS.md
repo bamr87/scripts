@@ -15,9 +15,9 @@ Pure Bash 4+ plus one Python 3 script; nothing to install or build.
 ```bash
 # install: none; every tool runs from the checkout (./install.sh only puts project-wizard on PATH, see Installation)
 ./project-init.sh --help                                          # every tool prints its own flags with --help
-tests/smoke.sh                                                    # offline safety smoke (sandboxed HOME, stub gh); CI: smoke.yml
-./git_init.sh --headless -n previewme --dry-run                   # smoke test, no side effects
-./STASHME/stashme.sh --dry-run                                    # smoke test, no side effects
+tests/smoke.sh                                                    # offline safety smoke (sandboxed HOME, stub gh and git, the --dry-run contracts); CI: smoke.yml
+./git_init.sh --headless -n previewme --dry-run                   # preview, no side effects (tests/smoke.sh holds this contract)
+./STASHME/stashme.sh --dry-run                                    # preview, no side effects (tests/smoke.sh holds this contract)
 shellcheck --severity=warning *.sh FORKME/forkme.sh STASHME/stashme.sh tests/*.sh   # lint (.shellcheckrc disables SC2034/SC2086/SC1091)
 python3 tools/unwrap-prose.py --check                             # markdown one-paragraph-per-line (fix with --write)
 python3 tools/docs_index.py --check                               # docs/README.md index is current (rebuild with --write)
@@ -34,7 +34,7 @@ python3 tools/docs_index.py --check                               # docs/README.
 | `STASHME/stashme.sh` | Multi-repo cloud stash to timestamped `stashme/…` branches, with `--dry-run`, `--restore`, `--cleanup`; docs in `STASHME/` |
 | `rename-directory.sh` | Safe directory rename with git/Docker pre-flight checks and optional backup ([quick reference](docs/rename-directory-quick-reference.md)) |
 | `create_package.sh` | Bootstraps a Python package repo from `microsoft/python-package-template` |
-| `tests/` | `smoke.sh`: the offline safety contract (side-effect-free `--help`, `CREATE_GITHUB_REPO` / `PUSH_TO_GITHUB` honored), run by `smoke.yml` |
+| `tests/` | `smoke.sh`: the offline safety contract (side-effect-free `--help`, `CREATE_GITHUB_REPO` / `PUSH_TO_GITHUB` honored, the `--dry-run` of `git_init.sh`, `forkme.sh` and `stashme.sh` writing nothing and making no `gh` or `git` network call, a real stash reaching its summary), run by `smoke.yml` |
 | `tools/` | `unwrap-prose.py` (vendored prose gate) and `docs_index.py` (vendored docs index generator) |
 | `docs/` | Docs index, ADRs (`docs/adr/`), guides |
 | `features/`, `verify/` | Feature index and the verify kit's scenarios (hub kit) |

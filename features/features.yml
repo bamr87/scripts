@@ -40,7 +40,7 @@ features:
     link: "FORKME/forkme.sh"
     docs: "FORKME/FORKME.md"
     tags: [github]
-    tests: []
+    tests: [tests/smoke.sh]
     scenarios: []
     evidence: []
   - id: SCRIPTS-003
@@ -53,7 +53,7 @@ features:
     link: "STASHME/stashme.sh"
     docs: "STASHME/STASHME.md"
     tags: [multi-repo, backup]
-    tests: []
+    tests: [tests/smoke.sh]
     scenarios: []
     evidence: []
   - id: SCRIPTS-004
@@ -66,7 +66,7 @@ features:
     link: "git_init.sh"
     docs: "README.md#git-init"
     tags: [github, scaffolding]
-    tests: []
+    tests: [tests/smoke.sh]
     scenarios: []
     evidence: []
   - id: SCRIPTS-005

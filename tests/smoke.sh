@@ -3,9 +3,12 @@
 # File: tests/smoke.sh
 # Description: Offline regression smoke for the toolbelt's safety contract:
 #              every --help is side-effect free, install.sh refuses unknown
-#              options, and project-init.sh honors CREATE_GITHUB_REPO and
-#              PUSH_TO_GITHUB. Runs in a throwaway HOME with a recording `gh`
-#              stub, so nothing reaches GitHub or the caller's dotfiles.
+#              options, project-init.sh honors CREATE_GITHUB_REPO and
+#              PUSH_TO_GITHUB, and the --dry-run of git_init.sh, forkme.sh and
+#              stashme.sh writes nothing and reaches no network, while a real
+#              stash still completes. Runs in a throwaway HOME with recording
+#              `gh` and `git` stubs, so nothing reaches GitHub or the caller's
+#              dotfiles.
 # Author: Amr Abdel-Motaleb <amr.abdel@gmail.com>
 # Created: 2026-10-27
 # Version: 1.0.0
@@ -36,11 +39,39 @@ exit 0
 STUB
 chmod +x "$WORK/bin/gh"
 
+# A git that records every network subcommand (push, pull, fetch, clone,
+# ls-remote) and swallows it, so a dry run that would reach a remote is caught
+# without one; anything else runs the real git, found here before sandboxed()
+# puts $WORK/bin first on PATH. GIT_STUB_PASSTHROUGH=1 records the call and
+# runs it anyway, for runs against local bare remotes.
+REAL_GIT="$(command -v git)"
+{
+    echo '#!/usr/bin/env bash'
+    printf 'log=%q\nreal_git=%q\n' "$WORK/git-calls.log" "$REAL_GIT"
+    cat <<'STUB'
+sub=""; i=1
+while [ "$i" -le "$#" ]; do
+    case "${!i}" in
+        -C|-c|--git-dir|--work-tree|--namespace) i=$((i + 2)) ;;
+        -*) i=$((i + 1)) ;;
+        *) sub="${!i}"; break ;;
+    esac
+done
+case "$sub" in
+    push|pull|fetch|clone|ls-remote)
+        echo "git $*" >> "$log"
+        [ "${GIT_STUB_PASSTHROUGH:-}" = 1 ] || exit 0 ;;
+esac
+exec "$real_git" "$@"
+STUB
+} > "$WORK/bin/git"
+chmod +x "$WORK/bin/git"
+
 # Run a command in a fresh sandbox HOME; prints nothing, returns its exit code.
 sandboxed() {
     local home="$1"; shift
     rm -rf "$home"; mkdir -p "$home"
-    : > "$WORK/gh-calls.log"
+    : > "$WORK/gh-calls.log"; : > "$WORK/git-calls.log"
     HOME="$home" PATH="$WORK/bin:$PATH" GIT_CONFIG_GLOBAL=/dev/null "$@" </dev/null >"$WORK/out.txt" 2>&1
 }
 
@@ -83,5 +114,78 @@ rc=0; scaffold default-push || rc=$?
 create_call="$(grep "repo create" "$WORK/gh-calls.log" || true)"
 if [ "$rc" -eq 0 ] && [[ "$create_call" == *--public*--push* ]]; then pass "defaults still create a public repo and push"
 else fail "default scaffold (exit $rc) called: ${create_call:-nothing}"; fi
+
+# 4. --dry-run changes nothing (issue #32): git_init.sh, forkme.sh and
+#    stashme.sh exit 0 and print their plan, write nothing under HOME or the
+#    working directory, and make no gh call and no git network call. A real
+#    stash over dirty repos still reaches its summary.
+# Run a command from a fresh, empty working directory in a fresh sandbox HOME.
+in_scratch() {
+    rm -rf "$WORK/cwd"; mkdir -p "$WORK/cwd"
+    (cd "$WORK/cwd" && sandboxed "$WORK/home" "$@")
+}
+# Everything the last in_scratch run left behind: entries under HOME (~) and
+# the working directory (.), then every recorded gh and git network call.
+side_effects() {
+    find "$WORK/home" "$WORK/cwd" -mindepth 1 | sed -e "s#$WORK/home#~#" -e "s#$WORK/cwd#.#"
+    cat "$WORK/gh-calls.log" "$WORK/git-calls.log"
+}
+# Fixture repos are built with the real git, isolated from the caller's config
+# and hooks: a repo with one commit, its own local bare origin and one
+# untracked file.
+fixture_git() { GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 "$REAL_GIT" "$@"; }
+dirty_repo() {
+    local repo="$1" remote="$2"
+    fixture_git init -q --bare "$remote"
+    fixture_git init -q -b main "$repo"
+    fixture_git -C "$repo" config user.name smoke
+    fixture_git -C "$repo" config user.email smoke@example.invalid
+    fixture_git -C "$repo" commit -q --allow-empty -m init
+    fixture_git -C "$repo" remote add origin "$remote"
+    echo "work in progress" > "$repo/wip.txt"
+}
+
+rc=0; in_scratch env GITHUB_USER=smoke bash "$REPO/git_init.sh" --headless -n previewme --dry-run || rc=$?
+left="$(side_effects | tr '\n' ' ')"
+if [ "$rc" -ne 0 ]; then fail "git_init.sh --dry-run exited $rc: $(tail -3 "$WORK/out.txt")"
+elif ! grep -qF "DRYRUN: Would run gh repo create smoke/previewme" "$WORK/out.txt"; then fail "git_init.sh --dry-run printed no gh repo create plan: $(tail -3 "$WORK/out.txt")"
+elif [ -n "$left" ]; then fail "git_init.sh --dry-run left: $left"
+else pass "git_init.sh --dry-run creates no repo directory and calls no gh or git network command"; fi
+
+rc=0; in_scratch bash "$REPO/FORKME/forkme.sh" --dry-run --no-fork octocat/Hello-World || rc=$?
+left="$(side_effects | tr '\n' ' ')"
+if [ "$rc" -ne 0 ]; then fail "forkme.sh --dry-run exited $rc: $(tail -3 "$WORK/out.txt")"
+elif ! grep -qF "[DRY RUN] Would clone: https://github.com/octocat/Hello-World.git" "$WORK/out.txt"; then fail "forkme.sh --dry-run printed no clone plan: $(tail -3 "$WORK/out.txt")"
+elif [ -n "$left" ]; then fail "forkme.sh --dry-run left: $left"
+else pass "forkme.sh --dry-run creates no forkme-workspace/ and clones nothing"; fi
+
+dirty_repo "$WORK/stash-dry/r1" "$WORK/remotes/dry-r1.git"
+rc=0; in_scratch bash "$REPO/STASHME/stashme.sh" --dry-run -d "$WORK/stash-dry" || rc=$?
+left="$(side_effects | tr '\n' ' ')"
+branches="$(fixture_git -C "$WORK/stash-dry/r1" branch --list 'stashme/*'; fixture_git -C "$WORK/remotes/dry-r1.git" branch --list 'stashme/*')"
+if [ "$rc" -ne 0 ]; then fail "stashme.sh --dry-run exited $rc: $(tail -3 "$WORK/out.txt")"
+elif ! grep -qF "[DRY RUN] Would create branch" "$WORK/out.txt"; then fail "stashme.sh --dry-run printed no branch plan: $(tail -3 "$WORK/out.txt")"
+elif [ -n "$branches" ]; then fail "stashme.sh --dry-run created branches: $branches"
+elif [ "$(fixture_git -C "$WORK/stash-dry/r1" status --porcelain)" != "?? wip.txt" ]; then fail "stashme.sh --dry-run changed the working tree: $(fixture_git -C "$WORK/stash-dry/r1" status --porcelain | tr '\n' ' ')"
+elif [ -n "$left" ]; then fail "stashme.sh --dry-run left: $left"
+else pass "stashme.sh --dry-run creates no stashme/* branch and pushes nothing"; fi
+
+dirty_repo "$WORK/stash-real/r1" "$WORK/remotes/real-r1.git"
+dirty_repo "$WORK/stash-real/r2" "$WORK/remotes/real-r2.git"
+rc=0; in_scratch env GIT_STUB_PASSTHROUGH=1 bash "$REPO/STASHME/stashme.sh" -d "$WORK/stash-real" -b stashme/smoke || rc=$?
+landed=""
+for r in r1 r2; do
+    if [ -n "$(fixture_git -C "$WORK/remotes/real-$r.git" branch --list stashme/smoke)" ]; then landed+="$r "; fi
+done
+if [ "$rc" -ne 0 ]; then fail "stashme.sh over two dirty repos exited $rc: $(tail -3 "$WORK/out.txt")"
+elif ! grep -qE "Successfully pushed: +2$" "$WORK/out.txt"; then fail "stashme.sh summary: $(grep -E "Successfully" "$WORK/out.txt" | tr '\n' ' ')"
+elif [ "$landed" != "r1 r2 " ]; then fail "stashme/smoke reached only these bare remotes: ${landed:-none}"
+else pass "stashme.sh stashes two dirty repos, pushes both and reaches its summary"; fi
+
+# A bare post-increment command returns status 1 when the counter was 0, and
+# set -e then aborts the tool: what killed every stashme run (issue #32).
+counters="$(cd "$REPO" && grep -nE '(^|[;&|[:space:]])\(\([[:space:]]*[A-Za-z_][A-Za-z0-9_]*(\+\+|--)[[:space:]]*\)\)' -- *.sh FORKME/forkme.sh STASHME/stashme.sh || true)"
+if [ -z "$counters" ]; then pass "no tool bumps a counter with a bare post-increment that set -e turns into an exit"
+else fail "post-increment commands abort under set -e when the counter is 0: $counters"; fi
 
 exit "$FAILED"
