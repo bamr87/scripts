@@ -18,7 +18,7 @@ Pure Bash 4+ plus one Python 3 script; nothing to install or build.
 tests/smoke.sh                                                    # offline safety smoke (sandboxed HOME, stub gh); CI: smoke.yml
 ./git_init.sh --headless -n previewme --dry-run                   # smoke test, no side effects
 ./STASHME/stashme.sh --dry-run                                    # smoke test, no side effects
-shellcheck --severity=warning *.sh FORKME/forkme.sh STASHME/stashme.sh tests/*.sh   # lint (.shellcheckrc disables SC2034/SC2086/SC1091)
+shellcheck --severity=warning *.sh FORKME/forkme.sh STASHME/stashme.sh tests/*.sh completions/*.bash   # lint (.shellcheckrc disables SC2034/SC2086/SC1091)
 python3 tools/unwrap-prose.py --check                             # markdown one-paragraph-per-line (fix with --write)
 python3 tools/docs_index.py --check                               # docs/README.md index is current (rebuild with --write)
 ```
@@ -36,6 +36,7 @@ python3 tools/docs_index.py --check                               # docs/README.
 | `create_package.sh` | Bootstraps a Python package repo from `microsoft/python-package-template` |
 | `tests/` | `smoke.sh`: the offline safety contract (side-effect-free `--help`, `CREATE_GITHUB_REPO` / `PUSH_TO_GITHUB` honored), run by `smoke.yml` |
 | `tools/` | `unwrap-prose.py` (vendored prose gate) and `docs_index.py` (vendored docs index generator) |
+| `completions/` | Hand-written bash completion for `forkme`, `stashme` and `git-init` (`*.bash`, sourced, no shebang) and the zsh loader `_toolbelt` (bashcompinit); `tests/smoke.sh` fails when a file's long flags stop matching its tool's `--help`, so a flag change updates both |
 | `docs/` | Docs index, ADRs (`docs/adr/`), guides |
 | `features/`, `verify/` | Feature index and the verify kit's scenarios (hub kit) |
 | `public/` | The fleet page-feedback widget (vendored) |

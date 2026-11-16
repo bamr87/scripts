@@ -132,14 +132,14 @@ features:
     evidence: []
   - id: SCRIPTS-010
     title: "Shell completions for the toolbelt"
-    description: "Bash/zsh completions for forkme, stashme, and git-init, with a smoke check that every long flag in --help is completed. Issue #35."
-    implemented: false
-    status: planned
+    description: "Bash/zsh completions for forkme, stashme, and git-init (flags, the --strategy, --tag-mode, --license and --scaffold values, and directories), with a smoke check that the long flags offered match each tool's --help exactly. Issue #35."
+    implemented: true
+    status: shipped
     prd: [FR5]
     surface: cli
     link: "completions/"
     docs: "README.md"
     tags: [dx, completions]
-    tests: []
+    tests: [tests/smoke.sh]
     scenarios: []
     evidence: []

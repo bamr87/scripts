@@ -1,0 +1,29 @@
+###############################################################################
+# File: completions/_toolbelt
+# Description: zsh loader for the toolbelt's tab completions. Enables zsh's
+#              bashcompinit, then sources forkme.bash, stashme.bash and
+#              git-init.bash from the directory this file lives in, so zsh
+#              completes forkme, stashme and git-init exactly as bash does.
+# Author: IT-Journey Scripts Team
+# Created: 2026-11-16
+# Version: 1.0.0
+#
+# Usage (in ~/.zshrc, after compinit if your setup runs it):
+#   source /path/to/scripts/completions/_toolbelt
+#
+# Source this file; it is not an fpath completion function (no #compdef line).
+###############################################################################
+
+# bashcompinit registers through compdef, which compinit defines.
+if (( ! $+functions[compdef] )); then
+    autoload -Uz compinit && compinit
+fi
+autoload -U +X bashcompinit && bashcompinit
+
+# ${(%):-%x} is the path of the file being sourced; :A resolves symlinks, :h is its directory.
+() {
+    local dir="${${(%):-%x}:A:h}" file
+    for file in "$dir"/forkme.bash "$dir"/stashme.bash "$dir"/git-init.bash; do
+        source "$file"
+    done
+}
