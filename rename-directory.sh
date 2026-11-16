@@ -101,7 +101,9 @@ Options:
   -h, --help     Show this help message
 
 Without --yes or --backup/--no-backup, each prompt is asked on stdin; with no
-stdin to answer from (CI, cron) the run stops before changing anything.
+stdin to answer from (CI, cron) the run stops before changing anything. If
+piped answers run out partway, it stops before copying or moving anything and
+names any containers an earlier answer already stopped.
 
 Examples:
   # Rename a project directory
@@ -197,15 +199,24 @@ if [ -z "$BACKUP_CHOICE" ] && [ "$ASSUME_YES" = true ]; then
     BACKUP_CHOICE=yes
 fi
 
+# Containers this run has already stopped, for ask_yes's report when it gives up.
+STOPPED_CONTAINERS=""
+
 # Ask a yes/no question on stdin; succeed only on "yes". With nothing on stdin
-# to answer (CI, cron), stop here, before anything has changed, instead of
-# letting set -e end the run without a word.
+# to answer (CI, cron, or piped answers that ran out), stop here, before the
+# directory is copied or moved, instead of letting set -e end the run without
+# a word, and say what an earlier answer already did.
 ask_yes() {
     local reply
     if ! read -r -p "$1 (yes/no): " reply; then
         if [ -t 0 ]; then echo ""; fi
         log_error "No answer on stdin to: $1"
-        log_error "Nothing was changed. For unattended use pass --yes (and --backup or --no-backup), or --dry-run to preview."
+        if [ -n "$STOPPED_CONTAINERS" ]; then
+            log_error "The directory was not copied or moved, but these containers were already stopped: $STOPPED_CONTAINERS"
+        else
+            log_error "Nothing was changed."
+        fi
+        log_error "For unattended use pass --yes (and --backup or --no-backup), or --dry-run to preview."
         exit 1
     fi
     [ "$reply" = "yes" ]
@@ -310,6 +321,7 @@ if command -v docker &> /dev/null; then
         elif [ "$ASSUME_YES" = true ] || ask_yes "Do you want to stop these containers?"; then
             log_info "Stopping containers..."
             echo "$RUNNING_CONTAINERS" | xargs docker stop 2>/dev/null || true
+            STOPPED_CONTAINERS="${RUNNING_CONTAINERS//$'\n'/ }"
             log_success "Containers stopped"
         else
             log_warning "Proceeding with containers running (may cause issues)"

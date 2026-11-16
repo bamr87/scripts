@@ -109,7 +109,7 @@ To set your own defaults, copy [`.env.example`](.env.example) and either pass it
 
 `./project-init.sh --help` prints the full option list without writing anything. A run logs to `~/.project-wizard/wizard.log`.
 
-To preview a run, add `--dry-run`: the wizard resolves the configuration as usual (prompts included), then prints every file it would write and every `git` and `gh` command it would run, the `gh repo create` call among them. It creates nothing, writes no log and never calls `gh`:
+To preview a run, add `--dry-run`: the wizard resolves the configuration as usual (prompts included), then prints every file it would write and every `git` and `gh` command it would run, the `gh repo create` call among them. It creates nothing, writes no log and never calls `gh`. Only the flag decides it, so a `DRY_RUN=false` in `./.env` or a `--config` file cannot turn a dry run into a real one:
 
 ```bash
 PROJECT_NAME=sandbox ./project-init.sh --non-interactive --dry-run
@@ -175,7 +175,7 @@ Renames a directory with pre-flight validation — checks source/target paths an
 ./rename-directory.sh --help
 ```
 
-It asks up to three questions (stop related containers, continue with uncommitted changes, create a backup). `--yes` answers the first two and takes the backup unless `--no-backup` is given; `--backup` or `--no-backup` alone answers only the backup question. With no stdin to answer from (CI, cron) and no such flag, the run stops before changing anything.
+It asks up to three questions (stop related containers, continue with uncommitted changes, create a backup). `--yes` answers the first two and takes the backup unless `--no-backup` is given; `--backup` or `--no-backup` alone answers only the backup question. With no stdin to answer from (CI, cron) and no such flag, the run stops before changing anything. If piped answers run out partway, it stops before copying or moving anything and names any containers an earlier answer already stopped.
 
 → [Quick reference](docs/rename-directory-quick-reference.md)
 
@@ -214,7 +214,7 @@ The [docs index](docs/README.md) lists every document with a one-line summary: t
 
 ## ✅ Development
 
-The gates are ShellCheck, the offline smoke test [`tests/smoke.sh`](tests/smoke.sh) (side-effect-free `--help` for every tool, `CREATE_GITHUB_REPO` / `PUSH_TO_GITHUB` honored, and the `--dry-run` of `git_init.sh`, `forkme.sh`, `stashme.sh`, `project-init.sh`, `rename-directory.sh` and `create_package.sh` writing nothing and making no `gh` call, `git` push, pull, fetch or clone, or `docker stop`, while a real stash into local bare remotes still reaches its summary, `rename-directory.sh --yes` renames with no stdin and `create_package.sh` refuses a non-empty target without `--force`; run against a sandboxed `HOME` with recording `gh`, `git` and `docker` stubs), the markdown one-paragraph-per-line rule and the docs index check, all in the [Quick start](#quick-start) block. In CI, [`smoke.yml`](.github/workflows/smoke.yml) runs ShellCheck and the smoke test (the hub's shared `standard-ci.yml` shellchecks nothing here), [`markdown-oneline.yml`](.github/workflows/markdown-oneline.yml) enforces the prose rule and [`ci.yml`](.github/workflows/ci.yml) calls the hub's shared `standard-ci.yml`. [`claude.yml`](.github/workflows/claude.yml) is the `@claude` handler, and `conformance.yml`, `release.yml` (release-please) and `verify.yml` are likewise thin callers of hub workflows. Conventions for new scripts, commits and branches live in [AGENTS.md](AGENTS.md).
+The gates are ShellCheck, the offline smoke test [`tests/smoke.sh`](tests/smoke.sh) (side-effect-free `--help` for every tool, `CREATE_GITHUB_REPO` / `PUSH_TO_GITHUB` honored, and the `--dry-run` of `git_init.sh`, `forkme.sh`, `stashme.sh`, `project-init.sh`, `rename-directory.sh` and `create_package.sh` writing nothing and making no `gh` call, `git` push, pull, fetch or clone, or `docker stop` (`project-init.sh`'s even when a sourced `./.env` or `--config` sets `DRY_RUN=false`), while a real stash into local bare remotes still reaches its summary, `rename-directory.sh --yes` renames with no stdin, `rename-directory.sh` names the containers it already stopped when piped answers run out, and `create_package.sh` refuses a non-empty target without `--force`; run against a sandboxed `HOME` with recording `gh`, `git` and `docker` stubs), the markdown one-paragraph-per-line rule and the docs index check, all in the [Quick start](#quick-start) block. In CI, [`smoke.yml`](.github/workflows/smoke.yml) runs ShellCheck and the smoke test (the hub's shared `standard-ci.yml` shellchecks nothing here), [`markdown-oneline.yml`](.github/workflows/markdown-oneline.yml) enforces the prose rule and [`ci.yml`](.github/workflows/ci.yml) calls the hub's shared `standard-ci.yml`. [`claude.yml`](.github/workflows/claude.yml) is the `@claude` handler, and `conformance.yml`, `release.yml` (release-please) and `verify.yml` are likewise thin callers of hub workflows. Conventions for new scripts, commits and branches live in [AGENTS.md](AGENTS.md).
 
 ## Contributing
 

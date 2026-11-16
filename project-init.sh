@@ -70,7 +70,12 @@ readonly DEFAULT_GITHUB_DIR="${HOME}/github"
 readonly LOG_FILE="${HOME}/.project-wizard/wizard.log"
 readonly INITIAL_COMMIT_MESSAGE="🎉 Initial commit - Project initialized with wizard"
 LOG_READY=false
-DRY_RUN=false   # --dry-run: resolve the configuration, print the plan, change nothing
+# --dry-run: resolve the configuration, print the plan, change nothing. Only the
+# flag sets it. The name is not DRY_RUN, which a project's own ./.env (sourced
+# in interactive mode) or a --config file often sets for something else, and
+# main() makes it readonly, so an assignment in a sourced file aborts the run
+# rather than turning the dry run into a real one.
+WIZARD_DRY_RUN=false
 
 # ==============================================================================
 # 🔧 CORE UTILITY FUNCTIONS
@@ -1042,7 +1047,12 @@ main() {
                 shift
                 ;;
             --dry-run)
-                DRY_RUN=true
+                # Readonly at once, so a --config sourced after this flag
+                # cannot turn it off; a repeated --dry-run is a no-op.
+                if [ "$WIZARD_DRY_RUN" != true ]; then
+                    WIZARD_DRY_RUN=true
+                    readonly WIZARD_DRY_RUN
+                fi
                 shift
                 ;;
             -h|--help)
@@ -1056,9 +1066,12 @@ main() {
                 ;;
         esac
     done
+    # The command line has decided: the ./.env that run_wizard sources cannot
+    # change it either way.
+    readonly WIZARD_DRY_RUN
 
     # A dry run writes nothing, its log included.
-    if [ "$DRY_RUN" != true ]; then
+    if [ "$WIZARD_DRY_RUN" != true ]; then
         init_logging
     fi
 
@@ -1092,7 +1105,7 @@ main() {
         *) error_exit "Unsupported project type '$PROJECT_TYPE' (expected: django, react, node, python, custom)" ;;
     esac
 
-    if [ "$DRY_RUN" = true ]; then
+    if [ "$WIZARD_DRY_RUN" = true ]; then
         show_dry_run_plan
         return 0
     fi
@@ -1133,7 +1146,8 @@ OPTIONS:
     --non-interactive     Run in non-interactive mode (uses env vars)
     --dry-run             Resolve the configuration (prompts included), then print
                           every file, git and gh step the run would take; creates
-                          nothing, writes no log and never calls gh
+                          nothing, writes no log and never calls gh. Only this
+                          flag sets it: a DRY_RUN in ./.env or --config is ignored
     -h, --help            Show this help message
 
 --config is applied where it appears, so pass it first; flags after it win.

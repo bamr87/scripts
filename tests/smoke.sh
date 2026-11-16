@@ -8,7 +8,9 @@
 #              stashme.sh writes nothing and reaches no network, while a real
 #              stash still completes. The destructive tools (project-init.sh,
 #              rename-directory.sh, create_package.sh) preview with --dry-run,
-#              rename-directory.sh runs unattended with --yes, and
+#              which a DRY_RUN=false in a sourced .env or --config cannot
+#              cancel; rename-directory.sh runs unattended with --yes and says
+#              what it already did when piped answers run out; and
 #              create_package.sh refuses a non-empty target without --force.
 #              Runs in a throwaway HOME with recording `gh`, `git` and
 #              `docker` stubs, so nothing reaches GitHub, Docker or the
@@ -203,9 +205,11 @@ if [ -z "$counters" ]; then pass "no tool bumps a counter with a bare post-incre
 else fail "post-increment commands abort under set -e when the counter is 0: $counters"; fi
 
 # 5. The destructive tools preview and run unattended (issue #31, PRD FR3):
-#    project-init.sh, rename-directory.sh and create_package.sh take --dry-run,
-#    rename-directory.sh takes --yes / --backup / --no-backup with no stdin,
-#    and create_package.sh refuses a non-empty target unless --force.
+#    project-init.sh, rename-directory.sh and create_package.sh take --dry-run
+#    (project-init.sh's survives a sourced DRY_RUN=false), rename-directory.sh
+#    takes --yes / --backup / --no-backup with no stdin and reports a stop it
+#    already made, and create_package.sh refuses a non-empty target unless
+#    --force.
 rc=0; in_scratch env NON_INTERACTIVE=true PROJECT_TYPE=custom PROJECT_NAME=dry \
     PROJECT_DIR="$WORK/projects/dry" GITHUB_USERNAME=smoke GITHUB_EMAIL=smoke@example.invalid \
     LICENSE=MIT SETUP_DOCKER=true SETUP_CI=true CREATE_GITHUB_REPO=true \
@@ -216,6 +220,54 @@ elif [ -e "$WORK/projects/dry" ]; then fail "project-init.sh --dry-run created P
 elif ! grep -qE "gh repo create smoke/dry --public .*--push" "$WORK/out.txt"; then fail "project-init.sh --dry-run printed no gh repo create line: $(grep -i 'github' "$WORK/out.txt" | tr '\n' ' ')"
 elif [ -n "$left" ]; then fail "project-init.sh --dry-run left: $left"
 else pass "project-init.sh --dry-run prints its gh repo create plan, creates nothing and calls no gh"; fi
+
+# in_scratch, but with ./.env copied from $1 (none if it is "-") and stdin read
+# from the file $2 instead of /dev/null, for the interactive prompts.
+interactive() {
+    local dotenv="$1" answers="$2"; shift 2
+    # shellcheck disable=SC2016  # expanded by the inner shell
+    in_scratch bash -c 'if [ "$1" != - ]; then cp "$1" .env; fi; f="$2"; shift 2; exec "$@" < "$f"' _ "$dotenv" "$answers" "$@"
+}
+printf '\n%.0s' 1 2 3 4 5 6 7 8 9 10 > "$WORK/enter-x10"
+
+# A sourced file cannot cancel --dry-run: a project's own .env (sourced by the
+# interactive wizard) or a --config file that sets DRY_RUN=false is ignored.
+cat > "$WORK/dry-env" <<EOF
+DRY_RUN=false
+NON_INTERACTIVE=true
+PROJECT_TYPE=custom
+PROJECT_NAME=envx
+PROJECT_DIR=$WORK/projects/envx
+GITHUB_USERNAME=smoke
+GITHUB_EMAIL=smoke@example.invalid
+CREATE_GITHUB_REPO=true
+EOF
+for mode in .env --config; do
+    rm -rf "$WORK/projects/envx"; rc=0
+    if [ "$mode" = .env ]; then
+        # TERM: the interactive wizard starts with `clear`, which fails without one.
+        interactive "$WORK/dry-env" "$WORK/enter-x10" env TERM=xterm bash "$REPO/project-init.sh" --dry-run || rc=$?
+    else
+        in_scratch bash "$REPO/project-init.sh" --non-interactive --dry-run --config "$WORK/dry-env" || rc=$?
+    fi
+    left="$(side_effects | { grep -vx '\./\.env' || true; } | tr '\n' ' ')"
+    if [ "$rc" -ne 0 ]; then fail "project-init.sh --dry-run with DRY_RUN=false in $mode exited $rc: $(tail -3 "$WORK/out.txt")"
+    elif [ -e "$WORK/projects/envx" ]; then fail "project-init.sh --dry-run with DRY_RUN=false in $mode created PROJECT_DIR: $(find "$WORK/projects/envx" -maxdepth 1 | sed "s#$WORK/##" | tr '\n' ' ')"
+    elif ! grep -qE "gh repo create smoke/envx --public .*--push" "$WORK/out.txt"; then fail "project-init.sh --dry-run with DRY_RUN=false in $mode printed no gh repo create line: $(tail -3 "$WORK/out.txt")"
+    elif [ -n "$left" ]; then fail "project-init.sh --dry-run with DRY_RUN=false in $mode left: $left"
+    else pass "project-init.sh --dry-run stays a dry run when $mode sets DRY_RUN=false"; fi
+done
+
+# The wizard's own flag variable is readonly: a sourced file that resets it
+# stops the run before anything is created.
+{ cat "$WORK/dry-env"; echo "WIZARD_DRY_RUN=false"; } > "$WORK/dry-env-reset"
+rm -rf "$WORK/projects/envx"; rc=0
+interactive "$WORK/dry-env-reset" "$WORK/enter-x10" env TERM=xterm bash "$REPO/project-init.sh" --dry-run || rc=$?
+left="$(side_effects | { grep -vx '\./\.env' || true; } | tr '\n' ' ')"
+if [ "$rc" -eq 0 ]; then fail "project-init.sh --dry-run exited 0 although ./.env reset WIZARD_DRY_RUN"
+elif ! grep -q "WIZARD_DRY_RUN: readonly variable" "$WORK/out.txt"; then fail "project-init.sh --dry-run with WIZARD_DRY_RUN reset stopped for another reason: $(tail -3 "$WORK/out.txt")"
+elif [ -e "$WORK/projects/envx" ] || [ -n "$left" ]; then fail "project-init.sh --dry-run with WIZARD_DRY_RUN reset left: $left"
+else pass "project-init.sh --dry-run stops, changing nothing, when a sourced .env resets its flag"; fi
 
 # rename-directory.sh: a dirty git repo, and a running container named after it.
 mkdir -p "$WORK/rename"
@@ -237,6 +289,16 @@ if [ "$rc" -eq 0 ]; then fail "rename-directory.sh with no stdin to answer its p
 elif [ ! -d "$WORK/rename/app" ] || [ -e "$WORK/rename/app2" ]; then fail "rename-directory.sh with no stdin moved the directory"
 elif grep -q "docker stop" "$WORK/docker-calls.log"; then fail "rename-directory.sh with no stdin stopped containers"
 else pass "rename-directory.sh with no stdin to answer stops before changing anything"; fi
+
+# One piped "yes" stops the container; the next prompt finds no answer, and the
+# message must own up to the stop instead of claiming nothing changed.
+echo yes > "$WORK/yes-once"
+rc=0; interactive - "$WORK/yes-once" env DOCKER_STUB_PS=app-web-1 bash "$REPO/rename-directory.sh" "$WORK/rename/app" "$WORK/rename/app2" || rc=$?
+if [ "$rc" -eq 0 ]; then fail "rename-directory.sh with one answer for two prompts exited 0"
+elif [ ! -d "$WORK/rename/app" ] || [ -e "$WORK/rename/app2" ]; then fail "rename-directory.sh with one answer moved the directory"
+elif ! grep -q "docker stop app-web-1" "$WORK/docker-calls.log"; then fail "rename-directory.sh did not act on the piped yes: $(cat "$WORK/docker-calls.log")"
+elif grep -q "Nothing was changed" "$WORK/out.txt" || ! grep -qF "already stopped: app-web-1" "$WORK/out.txt"; then fail "rename-directory.sh misreports what it changed: $(grep -A2 'No answer' "$WORK/out.txt" | tr '\n' ' ')"
+else pass "rename-directory.sh out of answers names the containers it already stopped"; fi
 
 rc=0; in_scratch env DOCKER_STUB_PS=app-web-1 bash "$REPO/rename-directory.sh" --yes --no-backup "$WORK/rename/app" "$WORK/rename/app2" || rc=$?
 if [ "$rc" -ne 0 ]; then fail "rename-directory.sh --yes --no-backup exited $rc: $(tail -3 "$WORK/out.txt")"

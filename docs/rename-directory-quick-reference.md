@@ -29,7 +29,7 @@
 ~/github/scripts/rename-directory.sh --yes --no-backup ~/github/old-project ~/github/new-project
 ```
 
-Unattended mode is never less safe than answering by hand: `--yes` takes the backup unless you opt out with `--no-backup`. Without `--yes` or `--backup`/`--no-backup`, every prompt is read from stdin, and when there is no stdin to answer from (CI, cron) the run stops with an error before anything has changed.
+Unattended mode is never less safe than answering by hand: `--yes` takes the backup unless you opt out with `--no-backup`. Without `--yes` or `--backup`/`--no-backup`, every prompt is read from stdin, and when there is no stdin to answer from (CI, cron) the run stops with an error before anything has changed. If piped answers run out partway, it stops before copying or moving anything, and the error names any containers an earlier answer already stopped.
 
 ## Common Examples
 
