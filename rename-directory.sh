@@ -11,12 +11,14 @@
 # special handling for git repositories, running Docker containers, and
 # automatic backups.
 #
-# Usage: 
-#   bash rename-directory.sh <source_path> <target_path>
+# Usage:
+#   bash rename-directory.sh [--dry-run] [-y|--yes] [--backup|--no-backup] <source_path> <target_path>
 #   bash rename-directory.sh /path/to/old-name /path/to/new-name
 #
 # Example:
 #   bash rename-directory.sh ~/github/posthog ~/github/bashog
+#   bash rename-directory.sh --dry-run ~/github/posthog ~/github/bashog   # preview only
+#   bash rename-directory.sh --yes ~/github/posthog ~/github/bashog       # unattended, with backup
 #
 # Features:
 #   - Pre-flight checks for source/target paths
@@ -79,7 +81,7 @@ print_header() {
 
 show_usage() {
     cat << EOF
-Usage: $(basename "$0") <source_path> <target_path>
+Usage: $(basename "$0") [options] <source_path> <target_path>
 
 Safely rename a directory with optional backup and git repository support.
 
@@ -88,14 +90,34 @@ Arguments:
   target_path    The new path for the directory
 
 Options:
+  --dry-run      Run the read-only pre-flight checks (paths, permissions,
+                 docker ps, git status) and print what would happen; never
+                 prompts, stops containers, copies or moves anything
+  -y, --yes      Answer yes to the stop-containers and uncommitted-changes
+                 prompts and take a backup (unless --no-backup), so the
+                 rename runs unattended
+  --backup       Create the backup without asking
+  --no-backup    Skip the backup without asking
   -h, --help     Show this help message
+
+Without --yes or --backup/--no-backup, each prompt is asked on stdin; with no
+stdin to answer from (CI, cron) the run stops before changing anything.
 
 Examples:
   # Rename a project directory
   $(basename "$0") ~/github/old-project ~/github/new-project
-  
+
   # Rename with full paths
   $(basename "$0") /Users/username/projects/app-v1 /Users/username/projects/app-v2
+
+  # Preview the rename: checks only, nothing changes
+  $(basename "$0") --dry-run ~/github/old-project ~/github/new-project
+
+  # Unattended (scripts, cron): stop related containers, back up, rename
+  $(basename "$0") --yes ~/github/old-project ~/github/new-project
+
+  # Unattended without a backup
+  $(basename "$0") --yes --no-backup ~/github/old-project ~/github/new-project
 
 Features:
   - Automatically detects and stops related Docker containers
@@ -111,20 +133,88 @@ EOF
 # Argument parsing
 ################################################################################
 
-if [ $# -eq 0 ] || [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+if [ $# -eq 0 ]; then
     show_usage
     exit 0
 fi
 
-if [ $# -ne 2 ]; then
+DRY_RUN=false
+ASSUME_YES=false
+BACKUP_CHOICE=""   # yes / no from --backup / --no-backup; empty = ask (or back up under --yes)
+POSITIONAL=()
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -h|--help)
+            show_usage
+            exit 0
+            ;;
+        --dry-run)
+            DRY_RUN=true
+            shift
+            ;;
+        -y|--yes)
+            ASSUME_YES=true
+            shift
+            ;;
+        --backup)
+            BACKUP_CHOICE=yes
+            shift
+            ;;
+        --no-backup)
+            BACKUP_CHOICE=no
+            shift
+            ;;
+        --)
+            shift
+            while [ $# -gt 0 ]; do POSITIONAL+=("$1"); shift; done
+            ;;
+        -*)
+            log_error "Unknown option: $1"
+            echo ""
+            show_usage
+            exit 1
+            ;;
+        *)
+            POSITIONAL+=("$1")
+            shift
+            ;;
+    esac
+done
+
+if [ ${#POSITIONAL[@]} -ne 2 ]; then
     log_error "Invalid number of arguments"
     echo ""
     show_usage
     exit 1
 fi
 
-SOURCE_DIR="$1"
-TARGET_DIR="$2"
+SOURCE_DIR="${POSITIONAL[0]}"
+TARGET_DIR="${POSITIONAL[1]}"
+
+# --yes means unattended, and unattended is never less safe than answering the
+# prompts by hand: it takes the backup unless --no-backup says otherwise.
+if [ -z "$BACKUP_CHOICE" ] && [ "$ASSUME_YES" = true ]; then
+    BACKUP_CHOICE=yes
+fi
+
+# Ask a yes/no question on stdin; succeed only on "yes". With nothing on stdin
+# to answer (CI, cron), stop here, before anything has changed, instead of
+# letting set -e end the run without a word.
+ask_yes() {
+    local reply
+    if ! read -r -p "$1 (yes/no): " reply; then
+        if [ -t 0 ]; then echo ""; fi
+        log_error "No answer on stdin to: $1"
+        log_error "Nothing was changed. For unattended use pass --yes (and --backup or --no-backup), or --dry-run to preview."
+        exit 1
+    fi
+    [ "$reply" = "yes" ]
+}
+
+# Print what a --dry-run skipped.
+would() {
+    log_info "[DRY RUN] Would $*"
+}
 
 # Expand tilde and resolve paths
 SOURCE_DIR="${SOURCE_DIR/#\~/$HOME}"
@@ -149,6 +239,9 @@ print_header "Directory Rename Tool"
 
 log_info "Source: $SOURCE_DIR"
 log_info "Target: $TARGET_DIR"
+if [ "$DRY_RUN" = true ]; then
+    log_warning "DRY RUN: checks only; nothing will be stopped, copied or moved"
+fi
 echo ""
 
 # Check if source directory exists
@@ -208,9 +301,13 @@ if command -v docker &> /dev/null; then
         log_warning "Found running Docker containers related to '$SOURCE_NAME':"
         echo "$RUNNING_CONTAINERS"
         echo ""
-        read -p "Do you want to stop these containers? (yes/no): " STOP_CONTAINERS
-        
-        if [ "$STOP_CONTAINERS" = "yes" ]; then
+        if [ "$DRY_RUN" = true ]; then
+            if [ "$ASSUME_YES" = true ]; then
+                would "stop these containers (--yes): docker stop ${RUNNING_CONTAINERS//$'\n'/ }"
+            else
+                would "ask whether to stop these containers"
+            fi
+        elif [ "$ASSUME_YES" = true ] || ask_yes "Do you want to stop these containers?"; then
             log_info "Stopping containers..."
             echo "$RUNNING_CONTAINERS" | xargs docker stop 2>/dev/null || true
             log_success "Containers stopped"
@@ -243,9 +340,15 @@ if git rev-parse --git-dir > /dev/null 2>&1; then
         echo ""
         git status --short
         echo ""
-        read -p "Do you want to continue anyway? (yes/no): " CONTINUE
-        
-        if [ "$CONTINUE" != "yes" ]; then
+        if [ "$DRY_RUN" = true ]; then
+            if [ "$ASSUME_YES" = true ]; then
+                would "continue despite the uncommitted changes (--yes)"
+            else
+                would "ask whether to continue despite the uncommitted changes"
+            fi
+        elif [ "$ASSUME_YES" = true ]; then
+            log_info "Continuing despite uncommitted changes (--yes)"
+        elif ! ask_yes "Do you want to continue anyway?"; then
             log_info "Aborting rename operation"
             exit 0
         fi
@@ -270,7 +373,27 @@ print_header "Backup Option"
 log_info "Backup would be created at:"
 log_info "  $BACKUP_DIR"
 echo ""
-read -p "Do you want to create a backup before renaming? (yes/no): " CREATE_BACKUP
+if [ -n "$BACKUP_CHOICE" ]; then
+    CREATE_BACKUP="$BACKUP_CHOICE"
+elif [ "$DRY_RUN" = true ]; then
+    CREATE_BACKUP=ask
+elif ask_yes "Do you want to create a backup before renaming?"; then
+    CREATE_BACKUP=yes
+else
+    CREATE_BACKUP=no
+fi
+
+if [ "$DRY_RUN" = true ]; then
+    case "$CREATE_BACKUP" in
+        yes) would "create the backup: cp -R \"$SOURCE_DIR\" \"$BACKUP_DIR\"" ;;
+        no)  would "skip the backup (--no-backup)" ;;
+        *)   would "ask whether to create the backup (pre-answer with --backup, --no-backup or --yes)" ;;
+    esac
+    would "rename: mv \"$SOURCE_DIR\" \"$TARGET_DIR\""
+    echo ""
+    log_success "Dry run complete: nothing was stopped, copied or moved"
+    exit 0
+fi
 
 if [ "$CREATE_BACKUP" = "yes" ]; then
     log_step "Creating backup..."
