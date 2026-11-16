@@ -2,7 +2,7 @@
 
 # scripts
 
-> Standalone Bash utilities (plus one Python tool) for project scaffolding, GitHub repository management and multi-repo maintenance.
+> scripts' direction is to become the ultimate open home for all things project and repository automation: data, tools, resources and transparency, with standalone Bash utilities for scaffolding, GitHub management and multi-repo maintenance, for everyone ([constitution](docs/constitution.md) §1).
 
 ## What this repo is
 

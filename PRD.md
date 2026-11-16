@@ -8,6 +8,17 @@ Derived from the README, agent docs, config and code in this repo. Anything not 
 
 A standalone collection of Bash command-line utilities (plus one Python tool) for project bootstrapping, GitHub repository management and multi-repo maintenance. No build and no dependency install; every script is self-contained. It is also vendored as a submodule of the bamr87 dash, which installs the scripts onto `PATH`.
 
+
+## 1.1 Missions
+
+scripts' direction is to become the ultimate open home for all things project and repository automation — data, tools, resources and transparency, gathered in one place that anyone can inspect and reuse.
+
+1. **Provide data, tools, resources and transparency for all stakeholders, maintainers, automation practitioners and the general public.** Maintainers, contributors, automation builders, and the general public are first-class audiences. The aim is a shared, open commons: the same scripts, the same tools, and the same trail of evidence for everyone.
+2. **Make project bootstrapping, GitHub repository management and multi-repo maintenance possible with standalone, self-contained tools.** No build and no dependency install; every script can be read, copied and run on its own. The collection is Bash command-line utilities plus one Python tool.
+3. **Put those tools on every maintainer's PATH, and make operating a fleet of repos effortless and inspectable.** The collection is also vendored as a submodule of the bamr87 dash, which installs the scripts onto `PATH` — an open toolkit for working with all things project and repository automation.
+
+These missions set the course; they do not claim the work is finished. They serve the existing constitution and PRD purpose: self-contained utilities with no build step, vendored into the dash. The earlier mission paragraph is absorbed into these three. Every feature must trace to them.
+
 ## 2. Target users
 
 - Developers scaffolding new projects or GitHub repos from the terminal
@@ -55,6 +66,7 @@ Every user-facing capability has a stable id in the feature catalog [`features/f
 | [SCRIPTS-008](features/features.yml) | install.sh standalone installer | shipped | [`install.sh`](install.sh) · [`README.md`](README.md) | TBD |
 | [SCRIPTS-009](features/features.yml) | install.sh --uninstall | planned | [`install.sh`](install.sh) · [`README.md`](README.md) | FR4 |
 | [SCRIPTS-010](features/features.yml) | Shell completions for the toolbelt | planned | `completions/` · [`README.md`](README.md) | FR5 |
+| [SCRIPTS-011](features/features.yml) | Missions in constitution §1 | planned | [`docs/constitution.md`](docs/constitution.md) | §1.1 |
 
 **Requirement → feature trace**
 
@@ -63,6 +75,7 @@ Every user-facing capability has a stable id in the feature catalog [`features/f
 | TBD | SCRIPTS-001, SCRIPTS-002, SCRIPTS-003, SCRIPTS-004, SCRIPTS-005, SCRIPTS-006, SCRIPTS-007, SCRIPTS-008 |
 | FR4 | SCRIPTS-009 |
 | FR5 | SCRIPTS-010 |
+| §1.1 | SCRIPTS-011 |
 <!-- features:end -->
 
 ## 5. Requirements
