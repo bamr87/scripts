@@ -4,7 +4,8 @@
 # Description: Offline regression smoke for the toolbelt's safety contract:
 #              every --help is side-effect free, install.sh refuses unknown
 #              options, and project-init.sh honors CREATE_GITHUB_REPO and
-#              PUSH_TO_GITHUB. Runs in a throwaway HOME with a recording `gh`
+#              PUSH_TO_GITHUB, and git_init.sh --no-push never creates a
+#              GitHub repo. Runs in a throwaway HOME with a recording `gh`
 #              stub, so nothing reaches GitHub or the caller's dotfiles.
 # Author: Amr Abdel-Motaleb <amr.abdel@gmail.com>
 # Created: 2026-10-27
@@ -35,6 +36,9 @@ echo "gh \$*" >> "$WORK/gh-calls.log"
 exit 0
 STUB
 chmod +x "$WORK/bin/gh"
+# An npx that does nothing, so git_init.sh's degit template fallback stays offline.
+printf '#!/usr/bin/env bash\nexit 0\n' > "$WORK/bin/npx"
+chmod +x "$WORK/bin/npx"
 
 # Run a command in a fresh sandbox HOME; prints nothing, returns its exit code.
 sandboxed() {
@@ -83,5 +87,16 @@ rc=0; scaffold default-push || rc=$?
 create_call="$(grep "repo create" "$WORK/gh-calls.log" || true)"
 if [ "$rc" -eq 0 ] && [[ "$create_call" == *--public*--push* ]]; then pass "defaults still create a public repo and push"
 else fail "default scaffold (exit $rc) called: ${create_call:-nothing}"; fi
+
+# 4. git_init.sh --no-push is local only: no gh repo create, with or without a template.
+for args in "" "-t octocat/template-repo"; do
+    # shellcheck disable=SC2086  # $args is deliberately word-split into flags
+    rc=0; sandboxed "$WORK/home" bash "$REPO/git_init.sh" --headless -n nopush -u smoke --license None --path "$WORK/repos" --no-push $args || rc=$?
+    label="git_init.sh --no-push${args:+ $args}"
+    if grep -q "repo create" "$WORK/gh-calls.log"; then fail "$label still called: $(cat "$WORK/gh-calls.log")"
+    elif [ ! -d "$WORK/repos/nopush/.git" ]; then fail "$label (exit $rc) made no local repo: $(tail -3 "$WORK/out.txt")"
+    else pass "$label never calls gh repo create"; fi
+    rm -rf "$WORK/repos"
+done
 
 exit "$FAILED"
