@@ -22,7 +22,7 @@ features:
     description: "Scaffold a Django, React, Node, Python, or custom project — optionally with Docker, CI, a license, and a GitHub repo — interactively or from flags/env vars."
     implemented: true
     status: shipped
-    prd: [TBD]
+    prd: [FR1, FR2, NFR1]
     surface: cli
     link: "project-init.sh"
     docs: "README.md#project-initialization-wizard"
@@ -35,7 +35,7 @@ features:
     description: "Fork or clone a GitHub repository with one of 10 strategies (full, shallow, sparse, filetype, analysis, mirror, …) instead of a plain git clone."
     implemented: true
     status: shipped
-    prd: [TBD]
+    prd: [FR1, FR3]
     surface: cli
     link: "FORKME/forkme.sh"
     docs: "FORKME/FORKME.md"
@@ -48,7 +48,7 @@ features:
     description: "Push uncommitted work across every repo under a directory tree to timestamped stashme/… remote branches, then list, restore, or clean them up."
     implemented: true
     status: shipped
-    prd: [TBD]
+    prd: [FR1, FR3, NFR1]
     surface: cli
     link: "STASHME/stashme.sh"
     docs: "STASHME/STASHME.md"
@@ -61,7 +61,7 @@ features:
     description: "Create a local git repo and, optionally, its GitHub remote (gh first, npx degit for templates, gitignore.io for .gitignore), interactively or headless with --dry-run."
     implemented: true
     status: shipped
-    prd: [TBD]
+    prd: [FR1, FR3, NFR1]
     surface: cli
     link: "git_init.sh"
     docs: "README.md#git-init"
@@ -74,7 +74,7 @@ features:
     description: "Rename a directory after git-status and Docker-container pre-flight checks, with an optional backup and post-rename verification."
     implemented: true
     status: shipped
-    prd: [TBD]
+    prd: [FR1, FR3, NFR1]
     surface: cli
     link: "rename-directory.sh"
     docs: "docs/rename-directory-quick-reference.md"
@@ -87,7 +87,7 @@ features:
     description: "Seed a new Python package repo under ~/github/<name> from microsoft/python-package-template, staged but not committed."
     implemented: true
     status: shipped
-    prd: [TBD]
+    prd: [FR1, NFR1]
     surface: cli
     link: "create_package.sh"
     docs: "README.md#create-package"
@@ -100,7 +100,7 @@ features:
     description: "Check or rewrite markdown so each paragraph is one line, leaving Liquid, code fences, and tables intact; backs the markdown-oneline CI gate."
     implemented: true
     status: shipped
-    prd: [TBD]
+    prd: [FR1]
     surface: cli
     link: "tools/unwrap-prose.py"
     docs: "tools/README.md"
@@ -113,7 +113,7 @@ features:
     description: "`install.sh` standalone installer (project-wizard only)"
     implemented: true
     status: shipped
-    prd: [TBD]
+    prd: [FR1, NFR1, NFR2]
     surface: cli
     link: "install.sh"
     docs: "README.md"
