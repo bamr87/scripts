@@ -1,7 +1,7 @@
 name: Feature request
 description: A new flag, a new behaviour, or a new script
 title: "feat: "
-labels: ["enhancement"]
+labels: ["feature"]
 body:
   - type: dropdown
     id: shape
