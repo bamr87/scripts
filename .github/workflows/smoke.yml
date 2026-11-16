@@ -2,10 +2,13 @@ name: smoke
 
 # The toolbelt's safety contract, offline: shellcheck every script, then
 # tests/smoke.sh (side-effect-free --help, install.sh refusing unknown options,
-# project-init.sh honoring CREATE_GITHUB_REPO / PUSH_TO_GITHUB, and the
-# --dry-run of git_init.sh, forkme.sh and stashme.sh writing nothing and making
-# no gh or git network call, while a real stash still completes). The shared
-# standard-ci.yml shellchecks nothing here, so this is the repo's own gate.
+# project-init.sh honoring CREATE_GITHUB_REPO / PUSH_TO_GITHUB, the --dry-run
+# of git_init.sh, forkme.sh, stashme.sh, project-init.sh, rename-directory.sh
+# and create_package.sh writing nothing and making no gh, git network or
+# docker stop call, a real stash still completing, rename-directory.sh --yes
+# running with no stdin, and create_package.sh refusing a non-empty target
+# without --force). The shared standard-ci.yml shellchecks nothing here, so
+# this is the repo's own gate.
 
 on:
   pull_request:

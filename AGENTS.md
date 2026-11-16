@@ -27,14 +27,14 @@ python3 tools/docs_index.py --check                               # docs/README.
 
 | Path | What |
 | --- | --- |
-| `project-init.sh` | Project scaffolding wizard (Django, React, Node, Python, custom; optional Docker, CI, license, GitHub repo); configured by `.env` / `--config` from `.env.example` |
+| `project-init.sh` | Project scaffolding wizard (Django, React, Node, Python, custom; optional Docker, CI, license, GitHub repo; `--dry-run`); configured by `.env` / `--config` from `.env.example` |
 | `install.sh` | Standalone installer: puts `project-wizard` on `PATH` and creates `~/.project-wizard/` |
 | `git_init.sh` | Interactive/headless git + GitHub repo creator (prefers `gh`, falls back to `npx degit`; gitignore.io; `--dry-run`) |
 | `forkme.sh` → `FORKME/forkme.sh` | Forking/cloning utility with 10 strategies; docs in `FORKME/` |
 | `STASHME/stashme.sh` | Multi-repo cloud stash to timestamped `stashme/…` branches, with `--dry-run`, `--restore`, `--cleanup`; docs in `STASHME/` |
-| `rename-directory.sh` | Safe directory rename with git/Docker pre-flight checks and optional backup ([quick reference](docs/rename-directory-quick-reference.md)) |
-| `create_package.sh` | Bootstraps a Python package repo from `microsoft/python-package-template` |
-| `tests/` | `smoke.sh`: the offline safety contract (side-effect-free `--help`, `CREATE_GITHUB_REPO` / `PUSH_TO_GITHUB` honored, the `--dry-run` of `git_init.sh`, `forkme.sh` and `stashme.sh` writing nothing and making no `gh` or `git` network call, a real stash reaching its summary), run by `smoke.yml` |
+| `rename-directory.sh` | Safe directory rename with git/Docker pre-flight checks and optional backup; `--dry-run`, unattended `--yes` / `--backup` / `--no-backup` ([quick reference](docs/rename-directory-quick-reference.md)) |
+| `create_package.sh` | Bootstraps a Python package repo from `microsoft/python-package-template`; `--dry-run`, and `--force` to overlay a non-empty target |
+| `tests/` | `smoke.sh`: the offline safety contract (side-effect-free `--help`, `CREATE_GITHUB_REPO` / `PUSH_TO_GITHUB` honored, the `--dry-run` of every tool that has one writing nothing and making no `gh`, `git` network or `docker stop` call, a real stash reaching its summary, `rename-directory.sh --yes` with no stdin, `create_package.sh` refusing a non-empty target without `--force`), run by `smoke.yml` |
 | `tools/` | `unwrap-prose.py` (vendored prose gate) and `docs_index.py` (vendored docs index generator) |
 | `docs/` | Docs index, ADRs (`docs/adr/`), guides |
 | `features/`, `verify/` | Feature index and the verify kit's scenarios (hub kit) |

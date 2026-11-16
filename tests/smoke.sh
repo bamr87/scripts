@@ -6,9 +6,13 @@
 #              options, project-init.sh honors CREATE_GITHUB_REPO and
 #              PUSH_TO_GITHUB, and the --dry-run of git_init.sh, forkme.sh and
 #              stashme.sh writes nothing and reaches no network, while a real
-#              stash still completes. Runs in a throwaway HOME with recording
-#              `gh` and `git` stubs, so nothing reaches GitHub or the caller's
-#              dotfiles.
+#              stash still completes. The destructive tools (project-init.sh,
+#              rename-directory.sh, create_package.sh) preview with --dry-run,
+#              rename-directory.sh runs unattended with --yes, and
+#              create_package.sh refuses a non-empty target without --force.
+#              Runs in a throwaway HOME with recording `gh`, `git` and
+#              `docker` stubs, so nothing reaches GitHub, Docker or the
+#              caller's dotfiles.
 # Author: Amr Abdel-Motaleb <amr.abdel@gmail.com>
 # Created: 2026-10-27
 # Version: 1.0.0
@@ -67,11 +71,21 @@ STUB
 } > "$WORK/bin/git"
 chmod +x "$WORK/bin/git"
 
+# A docker that records every call and changes nothing; `ps` lists the
+# containers named in DOCKER_STUB_PS (none by default).
+cat > "$WORK/bin/docker" <<STUB
+#!/usr/bin/env bash
+echo "docker \$*" >> "$WORK/docker-calls.log"
+if [ "\$1" = ps ] && [ -n "\${DOCKER_STUB_PS:-}" ]; then echo "\$DOCKER_STUB_PS"; fi
+exit 0
+STUB
+chmod +x "$WORK/bin/docker"
+
 # Run a command in a fresh sandbox HOME; prints nothing, returns its exit code.
 sandboxed() {
     local home="$1"; shift
     rm -rf "$home"; mkdir -p "$home"
-    : > "$WORK/gh-calls.log"; : > "$WORK/git-calls.log"
+    : > "$WORK/gh-calls.log"; : > "$WORK/git-calls.log"; : > "$WORK/docker-calls.log"
     HOME="$home" PATH="$WORK/bin:$PATH" GIT_CONFIG_GLOBAL=/dev/null "$@" </dev/null >"$WORK/out.txt" 2>&1
 }
 
@@ -187,5 +201,79 @@ else pass "stashme.sh stashes two dirty repos, pushes both and reaches its summa
 counters="$(cd "$REPO" && grep -nE '(^|[;&|[:space:]])\(\([[:space:]]*[A-Za-z_][A-Za-z0-9_]*(\+\+|--)[[:space:]]*\)\)' -- *.sh FORKME/forkme.sh STASHME/stashme.sh || true)"
 if [ -z "$counters" ]; then pass "no tool bumps a counter with a bare post-increment that set -e turns into an exit"
 else fail "post-increment commands abort under set -e when the counter is 0: $counters"; fi
+
+# 5. The destructive tools preview and run unattended (issue #31, PRD FR3):
+#    project-init.sh, rename-directory.sh and create_package.sh take --dry-run,
+#    rename-directory.sh takes --yes / --backup / --no-backup with no stdin,
+#    and create_package.sh refuses a non-empty target unless --force.
+rc=0; in_scratch env NON_INTERACTIVE=true PROJECT_TYPE=custom PROJECT_NAME=dry \
+    PROJECT_DIR="$WORK/projects/dry" GITHUB_USERNAME=smoke GITHUB_EMAIL=smoke@example.invalid \
+    LICENSE=MIT SETUP_DOCKER=true SETUP_CI=true CREATE_GITHUB_REPO=true \
+    bash "$REPO/project-init.sh" --non-interactive --dry-run || rc=$?
+left="$(side_effects | tr '\n' ' ')"
+if [ "$rc" -ne 0 ]; then fail "project-init.sh --dry-run exited $rc: $(tail -3 "$WORK/out.txt")"
+elif [ -e "$WORK/projects/dry" ]; then fail "project-init.sh --dry-run created PROJECT_DIR: $(find "$WORK/projects/dry" | tr '\n' ' ')"
+elif ! grep -qE "gh repo create smoke/dry --public .*--push" "$WORK/out.txt"; then fail "project-init.sh --dry-run printed no gh repo create line: $(grep -i 'github' "$WORK/out.txt" | tr '\n' ' ')"
+elif [ -n "$left" ]; then fail "project-init.sh --dry-run left: $left"
+else pass "project-init.sh --dry-run prints its gh repo create plan, creates nothing and calls no gh"; fi
+
+# rename-directory.sh: a dirty git repo, and a running container named after it.
+mkdir -p "$WORK/rename"
+dirty_repo "$WORK/rename/app" "$WORK/remotes/app.git"
+backups() { find "$WORK/rename" -mindepth 1 -maxdepth 1 -name "$1-backup-*" | sed "s#$WORK/rename/##"; }
+
+rc=0; in_scratch env DOCKER_STUB_PS=app-web-1 bash "$REPO/rename-directory.sh" --dry-run "$WORK/rename/app" "$WORK/rename/app2" || rc=$?
+left="$(side_effects | tr '\n' ' ')"
+if [ "$rc" -ne 0 ]; then fail "rename-directory.sh --dry-run exited $rc: $(tail -3 "$WORK/out.txt")"
+elif [ ! -d "$WORK/rename/app" ] || [ -e "$WORK/rename/app2" ]; then fail "rename-directory.sh --dry-run moved the directory"
+elif [ -n "$(backups app)" ]; then fail "rename-directory.sh --dry-run made a backup: $(backups app)"
+elif grep -q "docker stop" "$WORK/docker-calls.log"; then fail "rename-directory.sh --dry-run stopped containers: $(cat "$WORK/docker-calls.log")"
+elif ! grep -qF "[DRY RUN] Would rename" "$WORK/out.txt"; then fail "rename-directory.sh --dry-run printed no plan: $(tail -3 "$WORK/out.txt")"
+elif [ -n "$left" ]; then fail "rename-directory.sh --dry-run left: $left"
+else pass "rename-directory.sh --dry-run checks a dirty repo and changes nothing, without a prompt"; fi
+
+rc=0; in_scratch env DOCKER_STUB_PS=app-web-1 bash "$REPO/rename-directory.sh" "$WORK/rename/app" "$WORK/rename/app2" || rc=$?
+if [ "$rc" -eq 0 ]; then fail "rename-directory.sh with no stdin to answer its prompts exited 0"
+elif [ ! -d "$WORK/rename/app" ] || [ -e "$WORK/rename/app2" ]; then fail "rename-directory.sh with no stdin moved the directory"
+elif grep -q "docker stop" "$WORK/docker-calls.log"; then fail "rename-directory.sh with no stdin stopped containers"
+else pass "rename-directory.sh with no stdin to answer stops before changing anything"; fi
+
+rc=0; in_scratch env DOCKER_STUB_PS=app-web-1 bash "$REPO/rename-directory.sh" --yes --no-backup "$WORK/rename/app" "$WORK/rename/app2" || rc=$?
+if [ "$rc" -ne 0 ]; then fail "rename-directory.sh --yes --no-backup exited $rc: $(tail -3 "$WORK/out.txt")"
+elif [ -e "$WORK/rename/app" ] || [ ! -d "$WORK/rename/app2/.git" ]; then fail "rename-directory.sh --yes --no-backup did not rename app to app2"
+elif [ -n "$(backups app)" ]; then fail "rename-directory.sh --no-backup made a backup: $(backups app)"
+elif ! grep -q "docker stop app-web-1" "$WORK/docker-calls.log"; then fail "rename-directory.sh --yes did not stop the container: $(cat "$WORK/docker-calls.log")"
+else pass "rename-directory.sh --yes --no-backup renames unattended, stopping the related container"; fi
+
+rc=0; in_scratch bash "$REPO/rename-directory.sh" --yes "$WORK/rename/app2" "$WORK/rename/app3" || rc=$?
+if [ "$rc" -ne 0 ]; then fail "rename-directory.sh --yes exited $rc: $(tail -3 "$WORK/out.txt")"
+elif [ -e "$WORK/rename/app2" ] || [ ! -d "$WORK/rename/app3" ]; then fail "rename-directory.sh --yes did not rename app2 to app3"
+elif [ -z "$(backups app2)" ]; then fail "rename-directory.sh --yes made no backup"
+else pass "rename-directory.sh --yes renames unattended and backs up first"; fi
+
+rc=0; in_scratch bash "$REPO/create_package.sh" --dry-run pkg || rc=$?
+left="$(side_effects | tr '\n' ' ')"
+if [ "$rc" -ne 0 ]; then fail "create_package.sh --dry-run exited $rc: $(tail -3 "$WORK/out.txt")"
+elif ! grep -qF "git clone --depth=1 https://github.com/microsoft/python-package-template.git" "$WORK/out.txt"; then fail "create_package.sh --dry-run printed no clone step: $(tail -3 "$WORK/out.txt")"
+elif [ -n "$left" ]; then fail "create_package.sh --dry-run left: $left"
+else pass "create_package.sh --dry-run creates no ~/github/pkg and clones nothing"; fi
+
+# create_package.sh in a sandbox whose ~/github/pkg already holds existing.txt.
+over_existing_pkg() {
+    # shellcheck disable=SC2016  # $HOME is the sandbox's, expanded by the inner shell
+    sandboxed "$WORK/home" bash -c 'mkdir -p "$HOME/github/pkg" && echo keep > "$HOME/github/pkg/existing.txt" && exec bash "$@"' \
+        _ "$REPO/create_package.sh" "$@"
+}
+rc=0; over_existing_pkg pkg || rc=$?
+if [ "$rc" -eq 0 ]; then fail "create_package.sh overlaid a non-empty ~/github/pkg without --force"
+elif [ "$(cat "$WORK/home/github/pkg/existing.txt")" != keep ] || [ -e "$WORK/home/github/pkg/.git" ]; then fail "create_package.sh changed a non-empty ~/github/pkg it refused"
+elif [ -s "$WORK/git-calls.log" ]; then fail "create_package.sh cloned before refusing: $(cat "$WORK/git-calls.log")"
+else pass "create_package.sh refuses a non-empty ~/github/pkg and leaves it untouched"; fi
+
+rc=0; over_existing_pkg --force pkg || rc=$?
+if [ "$rc" -ne 0 ]; then fail "create_package.sh --force exited $rc: $(tail -3 "$WORK/out.txt")"
+elif [ "$(cat "$WORK/home/github/pkg/existing.txt")" != keep ] || [ ! -d "$WORK/home/github/pkg/.git" ]; then fail "create_package.sh --force did not bootstrap over ~/github/pkg"
+elif ! grep -q "git clone --depth=1" "$WORK/git-calls.log"; then fail "create_package.sh --force never cloned the template"
+else pass "create_package.sh --force bootstraps over a non-empty ~/github/pkg"; fi
 
 exit "$FAILED"
