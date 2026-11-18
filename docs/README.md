@@ -12,7 +12,7 @@
 
 | Document | What it covers |
 | --- | --- |
-| [`AGENTS.md`](../AGENTS.md) | Standalone Bash utilities (plus one Python tool) for project scaffolding, GitHub repository management and multi-repo maintenance. |
+| [`AGENTS.md`](../AGENTS.md) | scripts' direction is to become the ultimate open home for all things project and repository automation: data, tools, resources and transparency, with standalone Bash utilities for scaffolding, GitHub management and multi-repo maintenance… |
 | [`CHANGELOG.md`](../CHANGELOG.md) | Release history: the notable changes in each version, newest first. |
 | [`SECURITY.md`](../SECURITY.md) | Which version is supported (the tip of main) and how to report a vulnerability privately. |
 | [`PRD.md`](../PRD.md) | The product requirements for bamr87/scripts: the problem, users, goals, features, requirements, success measures and open questions. |

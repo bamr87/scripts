@@ -335,7 +335,8 @@ gh auth status
 Check the directory path and depth:
 
 ```bash
-# Increase search depth
+# Increase search depth (a non-negative integer; anything else exits with
+# "Invalid --max-depth" before the search runs)
 ./stashme.sh --max-depth 5
 
 # Include hidden directories

@@ -144,12 +144,14 @@ if [ -z "$GITHUB_USER" ]; then
 fi
 
 # Dry-run helper and interactive prompts
+# Takes the command as argv (run_or_echo git commit -m "msg"), never a string
+# re-parsed as shell, so a repo name or description is always one argument. The dry-run
+# line is shell-quoted with printf %q, so it can be copied and run as is.
 run_or_echo() {
     if [ "$DRY_RUN" = true ]; then
-        echo "DRYRUN: $*"
+        echo "DRYRUN: $(printf '%q ' "$@")"
     else
-        # Callers pass one pre-quoted command string (e.g. "git commit ... || true")
-        eval "$*"
+        "$@"
     fi
 }
 
@@ -206,7 +208,7 @@ fi
 # Add remote and push
 
 # create folder structure
-run_or_echo "mkdir -p \"$REPO_PATH\""
+run_or_echo mkdir -p "$REPO_PATH"
 if [ "$DRY_RUN" = true ]; then
     echo "DRYRUN: Would change directory to $REPO_PATH"
 else
@@ -215,7 +217,7 @@ fi
 
 # Initialize Git and create README if not present
 if [ ! -d .git ]; then
-    run_or_echo "git init"
+    run_or_echo git init
 fi
 
 if [ ! -f README.md ]; then
@@ -243,7 +245,7 @@ scaffold_repo() {
     echo "Creating scaffold: $type"
     case "$type" in
         jekyll)
-            run_or_echo "mkdir -p _posts _layouts assets css js"
+            run_or_echo mkdir -p _posts _layouts assets css js
             if [ "$DRY_RUN" = true ]; then
                 echo "DRYRUN: Would create _posts/0000-00-00-welcome.md"
             else
@@ -251,7 +253,7 @@ scaffold_repo() {
             fi
             ;;
         python)
-            run_or_echo "mkdir -p src tests docs scripts"
+            run_or_echo mkdir -p src tests docs scripts
             if [ "$DRY_RUN" = true ]; then
                 echo "DRYRUN: Would create src/__init__.py"
             else
@@ -259,7 +261,7 @@ scaffold_repo() {
             fi
             ;;
         node)
-            run_or_echo "mkdir -p src tests public"
+            run_or_echo mkdir -p src tests public
             if [ "$DRY_RUN" = true ]; then
                 echo "DRYRUN: Would create package.json"
             else
@@ -267,7 +269,7 @@ scaffold_repo() {
             fi
             ;;
         minimal)
-            run_or_echo "mkdir -p docs scripts"
+            run_or_echo mkdir -p docs scripts
             ;;
         none)
             ;;
@@ -356,7 +358,7 @@ if [ -n "$TEMPLATE" ]; then
             fi
         # ensure remote is configured if not already
         if ! git remote get-url origin >/dev/null 2>&1; then
-            run_or_echo "git remote add origin git@github.com:$GITHUB_USER/$REPO_NAME.git"
+            run_or_echo git remote add origin "git@github.com:$GITHUB_USER/$REPO_NAME.git"
         fi
     elif command -v npx >/dev/null 2>&1; then
         echo "Creating scaffold from template via degit"
@@ -375,9 +377,9 @@ if ! git rev-parse --verify HEAD >/dev/null 2>&1; then
     if [ "$DRY_RUN" = true ]; then
         echo "DRYRUN: Would stage all files and create initial commit"
     else
-        run_or_echo "git add ."
+        run_or_echo git add .
         # Don't let an empty tree fail the script
-        run_or_echo "git commit -m 'Initial commit' || true"
+        run_or_echo git commit -m 'Initial commit' || true
     fi
 fi
 

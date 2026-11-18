@@ -302,7 +302,7 @@ project/
 - Cleans up empty directories
 
 **Options:**
-- `--file-types <extensions>`: Comma-separated list of file extensions
+- `--file-types <extensions>`: Comma-separated list of file extensions. Each entry must be letters and digits only (`py`, `md`, `tfvars`); anything else, including a leading dot or a space after the comma, exits with `Invalid --file-types entry` before anything is cloned, because the list builds a `find … -delete` expression.
 
 **Pros:** Focused review, reduced clutter, faster analysis  
 **Cons:** May miss important files with different extensions
