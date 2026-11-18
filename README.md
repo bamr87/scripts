@@ -41,7 +41,7 @@ Then, from the checkout:
 tests/smoke.sh                                                    # offline safety smoke (sandboxed HOME, stub gh and git, the --dry-run contracts); CI: smoke.yml
 ./git_init.sh --headless -n previewme --dry-run                   # preview, no side effects (tests/smoke.sh holds this contract)
 ./STASHME/stashme.sh --dry-run                                    # preview, no side effects (tests/smoke.sh holds this contract)
-shellcheck --severity=warning *.sh FORKME/forkme.sh STASHME/stashme.sh tests/*.sh   # lint (.shellcheckrc disables SC2034/SC2086/SC1091)
+shellcheck --severity=warning *.sh FORKME/forkme.sh STASHME/stashme.sh tests/*.sh completions/*.bash   # lint (.shellcheckrc disables SC2034/SC2086/SC1091)
 python3 tools/unwrap-prose.py --check                             # markdown one-paragraph-per-line (fix with --write)
 python3 tools/docs_index.py --check                               # docs/README.md index is current (rebuild with --write)
 ```
@@ -74,6 +74,20 @@ Don't run both. The hub's setup is a strict superset for CLI installation, so if
 To undo the standalone install, run `./install.sh --uninstall` (add `--dry-run` to preview it). It removes `~/.local/bin/project-wizard` only when it points to this checkout, takes the `PATH` block out of `~/.zshrc` and `~/.bashrc` after copying each to `<rc>.bak`, and asks before deleting `~/.project-wizard/`, which holds your templates and config; with no terminal to ask it keeps the directory, and `--purge` deletes it without asking. A second run changes nothing.
 
 Every script also runs directly with no installation at all; each prints its options with `--help`.
+
+### Shell completions
+
+Tab completion for `forkme`, `stashme` and `git-init` lives in [`completions/`](completions/). It completes every flag, the values of `forkme --strategy` and `--tag-mode` and of `git-init --license` and `--scaffold`, and directories wherever a tool takes one (`stashme`'s base directory and `-d`, `forkme --target` and `--work-dir`, `git-init --path`). Each file also completes the script under its own name, so `./forkme.sh`, `./STASHME/stashme.sh` and `./git_init.sh` work from a checkout. Neither `install.sh` nor the hub's `tools/setup.sh` loads them yet, so add one line to your shell's rc file:
+
+```bash
+# ~/.bashrc (bash 3.2 or later)
+for f in /path/to/scripts/completions/*.bash; do source "$f"; done
+
+# ~/.zshrc, after compinit if your setup runs it (_toolbelt loads the bash files through bashcompinit)
+source /path/to/scripts/completions/_toolbelt
+```
+
+[`tests/smoke.sh`](tests/smoke.sh) fails when a completion file stops offering exactly the long flags its tool's `--help` lists, so a new flag goes into both.
 
 ## 🎯 Usage
 
@@ -216,6 +230,7 @@ The [docs index](docs/README.md) lists every document with a one-line summary: t
 | --- | --- |
 | `*.sh` (root) | The tools themselves (`forkme.sh` is a symlink to `FORKME/forkme.sh`); see [Features](#-features) |
 | `FORKME/`, `STASHME/` | ForkMe and StashMe, each with its own guide, quick reference and examples |
+| `completions/` | Bash and zsh tab completion for `forkme`, `stashme` and `git-init`; see [Shell completions](#shell-completions) |
 | `docs/` | Docs index, decision log, the rename-directory quick reference |
 | `tests/` | `smoke.sh`, the offline safety smoke run by `smoke.yml` |
 | `tools/` | Repo maintenance scripts (the prose gate and the docs index generator) |
