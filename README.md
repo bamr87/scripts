@@ -16,12 +16,12 @@ Every tool, the command the hub installs it as, and what it does:
 
 | Script | Command | What it does |
 | --- | --- | --- |
-| [`project-init.sh`](project-init.sh) | `project-wizard` | Interactive/non-interactive project scaffolding wizard — Django, React, Node, Python, custom; optional Docker, CI, license, and GitHub repo creation |
+| [`project-init.sh`](project-init.sh) | `project-wizard` | Interactive/non-interactive project scaffolding wizard — Django, React, Node, Python, custom; optional Docker, CI, license, and GitHub repo creation; `--dry-run` prints the plan |
 | [`forkme.sh`](FORKME/forkme.sh) → `FORKME/forkme.sh` | `forkme` | Repository forking/cloning utility with 10 strategies (full, shallow, sparse, toplevel, structure, filetype, analysis, mirror, bundle, metadata-only) |
 | [`STASHME/stashme.sh`](STASHME/stashme.sh) | `stashme` | Multi-repo cloud stash — pushes uncommitted work across many repos to timestamped `stashme/…` backup branches, with restore and cleanup modes |
 | [`git_init.sh`](git_init.sh) | `git-init` | Interactive/headless git + GitHub repo creator; prefers `gh`, falls back to `npx degit` for templates, uses gitignore.io for `.gitignore` |
-| [`rename-directory.sh`](rename-directory.sh) | `rename-dir` | Safe directory rename with git/Docker pre-flight checks and optional backup |
-| [`create_package.sh`](create_package.sh) | `create-package` | Bootstraps a Python package repo from `microsoft/python-package-template` |
+| [`rename-directory.sh`](rename-directory.sh) | `rename-dir` | Safe directory rename with git/Docker pre-flight checks and optional backup; `--dry-run` previews, `--yes` (with `--backup` / `--no-backup`) runs unattended |
+| [`create_package.sh`](create_package.sh) | `create-package` | Bootstraps a Python package repo from `microsoft/python-package-template`; `--dry-run` previews, and a non-empty target needs `--force` |
 | [`tools/unwrap-prose.py`](tools/unwrap-prose.py) | — | Liquid-safe markdown unwrapper enforcing one-paragraph-per-line; backs the `markdown-oneline` CI gate |
 
 Per-tool guides live next to the tools: [`FORKME/`](FORKME/FORKME.md), [`STASHME/`](STASHME/STASHME.md), and [`docs/rename-directory-quick-reference.md`](docs/rename-directory-quick-reference.md).
@@ -109,6 +109,12 @@ To set your own defaults, copy [`.env.example`](.env.example) and either pass it
 
 `./project-init.sh --help` prints the full option list without writing anything. A run logs to `~/.project-wizard/wizard.log`.
 
+To preview a run, add `--dry-run`: the wizard resolves the configuration as usual (prompts included), then prints every file it would write and every `git` and `gh` command it would run, the `gh repo create` call among them. It creates nothing, writes no log and never calls `gh`. Only the flag decides it, so a `DRY_RUN=false` in `./.env` or a `--config` file cannot turn a dry run into a real one:
+
+```bash
+PROJECT_NAME=sandbox ./project-init.sh --non-interactive --dry-run
+```
+
 ### ForkMe
 
 Forking and cloning strategies that go beyond `git clone` — shallow and sparse checkouts for large repos, filetype extraction, and metadata-only analysis:
@@ -163,19 +169,25 @@ Renames a directory with pre-flight validation — checks source/target paths an
 
 ```bash
 ./rename-directory.sh ~/projects/old-name ~/projects/new-name
+./rename-directory.sh --dry-run ~/projects/old-name ~/projects/new-name             # checks only, nothing changes
+./rename-directory.sh --yes ~/projects/old-name ~/projects/new-name                 # unattended, with a backup
+./rename-directory.sh --yes --no-backup ~/projects/old-name ~/projects/new-name     # unattended, no backup
 ./rename-directory.sh --help
 ```
+
+It asks up to three questions (stop related containers, continue with uncommitted changes, create a backup). `--yes` answers the first two and takes the backup unless `--no-backup` is given; `--backup` or `--no-backup` alone answers only the backup question. With no stdin to answer from (CI, cron) and no such flag, the run stops before changing anything. If piped answers run out partway, it stops before copying or moving anything and names any containers an earlier answer already stopped.
 
 → [Quick reference](docs/rename-directory-quick-reference.md)
 
 ### Create Package
 
 ```bash
-./create_package.sh awesome-lib   # → ~/github/awesome-lib, seeded from microsoft/python-package-template
+./create_package.sh awesome-lib             # → ~/github/awesome-lib, seeded from microsoft/python-package-template
+./create_package.sh --dry-run awesome-lib   # print the mkdir, git init, clone, rsync and git add steps; change nothing
 ./create_package.sh --help
 ```
 
-The name must be a plain directory name; anything starting with `-` or containing `/` is rejected. The template files are staged (`git add .`) but not committed.
+The name must be a plain directory name; anything starting with `-` or containing `/` is rejected. A `~/github/<name>` that already exists and is not empty is refused, untouched, unless you pass `--force` to overlay the template onto it. The template files are staged (`git add .`) but not committed.
 
 ## 🔒 Prerequisites
 
@@ -202,7 +214,7 @@ The [docs index](docs/README.md) lists every document with a one-line summary: t
 
 ## ✅ Development
 
-The gates are ShellCheck, the offline smoke test [`tests/smoke.sh`](tests/smoke.sh) (side-effect-free `--help` for every tool, `CREATE_GITHUB_REPO` / `PUSH_TO_GITHUB` honored, and the `--dry-run` of `git_init.sh`, `forkme.sh` and `stashme.sh` writing nothing and making no `gh` call or `git` push, pull, fetch or clone, while a real stash into local bare remotes still reaches its summary; run against a sandboxed `HOME` with recording `gh` and `git` stubs), the markdown one-paragraph-per-line rule and the docs index check, all in the [Quick start](#quick-start) block. In CI, [`smoke.yml`](.github/workflows/smoke.yml) runs ShellCheck and the smoke test (the hub's shared `standard-ci.yml` shellchecks nothing here), [`markdown-oneline.yml`](.github/workflows/markdown-oneline.yml) enforces the prose rule and [`ci.yml`](.github/workflows/ci.yml) calls the hub's shared `standard-ci.yml`. [`claude.yml`](.github/workflows/claude.yml) is the `@claude` handler, and `conformance.yml`, `release.yml` (release-please) and `verify.yml` are likewise thin callers of hub workflows. Conventions for new scripts, commits and branches live in [AGENTS.md](AGENTS.md).
+The gates are ShellCheck, the offline smoke test [`tests/smoke.sh`](tests/smoke.sh) (side-effect-free `--help` for every tool, `CREATE_GITHUB_REPO` / `PUSH_TO_GITHUB` honored, and the `--dry-run` of `git_init.sh`, `forkme.sh`, `stashme.sh`, `project-init.sh`, `rename-directory.sh` and `create_package.sh` writing nothing and making no `gh` call, `git` push, pull, fetch or clone, or `docker stop` (`project-init.sh`'s even when a sourced `./.env` or `--config` sets `DRY_RUN=false`), while a real stash into local bare remotes still reaches its summary, `rename-directory.sh --yes` renames with no stdin, `rename-directory.sh` names the containers it already stopped when piped answers run out, and `create_package.sh` refuses a non-empty target without `--force`; run against a sandboxed `HOME` with recording `gh`, `git` and `docker` stubs), the markdown one-paragraph-per-line rule and the docs index check, all in the [Quick start](#quick-start) block. In CI, [`smoke.yml`](.github/workflows/smoke.yml) runs ShellCheck and the smoke test (the hub's shared `standard-ci.yml` shellchecks nothing here), [`markdown-oneline.yml`](.github/workflows/markdown-oneline.yml) enforces the prose rule and [`ci.yml`](.github/workflows/ci.yml) calls the hub's shared `standard-ci.yml`. [`claude.yml`](.github/workflows/claude.yml) is the `@claude` handler, and `conformance.yml`, `release.yml` (release-please) and `verify.yml` are likewise thin callers of hub workflows. Conventions for new scripts, commits and branches live in [AGENTS.md](AGENTS.md).
 
 ## Contributing
 
