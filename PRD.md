@@ -8,6 +8,17 @@ Derived from the README, agent docs, config and code in this repo. Anything not 
 
 A standalone collection of Bash command-line utilities (plus one Python tool) for project bootstrapping, GitHub repository management and multi-repo maintenance. No build and no dependency install; every script is self-contained. It is also vendored as a submodule of the bamr87 dash, which installs the scripts onto `PATH`.
 
+
+## 1.1 Missions
+
+scripts' direction is to become the ultimate open home for all things project and repository automation — data, tools, resources and transparency, gathered in one place that anyone can inspect and reuse.
+
+1. **Provide data, tools, resources and transparency for all stakeholders, maintainers, automation practitioners and the general public.** Maintainers, contributors, automation builders, and the general public are first-class audiences. The aim is a shared, open commons: the same scripts, the same tools, and the same trail of evidence for everyone.
+2. **Make project bootstrapping, GitHub repository management and multi-repo maintenance possible with standalone, self-contained tools.** No build and no dependency install; every script can be read, copied and run on its own. The collection is Bash command-line utilities plus one Python tool.
+3. **Put those tools on every maintainer's PATH, and make operating a fleet of repos effortless and inspectable.** The collection is also vendored as a submodule of the bamr87 dash, which installs the scripts onto `PATH` — an open toolkit for working with all things project and repository automation.
+
+These missions set the course; they do not claim the work is finished. They serve the existing constitution and PRD purpose: self-contained utilities with no build step, vendored into the dash. The earlier mission paragraph is absorbed into these three. Every feature must trace to them.
+
 ## 2. Target users
 
 - Developers scaffolding new projects or GitHub repos from the terminal
@@ -45,24 +56,30 @@ Every user-facing capability has a stable id in the feature catalog [`features/f
 
 | ID | Feature | Status | Where | Requirements |
 | --- | --- | --- | --- | --- |
-| [SCRIPTS-001](features/features.yml) | Project initialization wizard | shipped | [`project-init.sh`](project-init.sh) · `README.md#project-initialization-wizard` | TBD |
-| [SCRIPTS-002](features/features.yml) | ForkMe repository forking/cloning | shipped | [`FORKME/forkme.sh`](FORKME/forkme.sh) · [`FORKME/FORKME.md`](FORKME/FORKME.md) | TBD |
-| [SCRIPTS-003](features/features.yml) | StashMe multi-repo cloud stash | shipped | [`STASHME/stashme.sh`](STASHME/stashme.sh) · [`STASHME/STASHME.md`](STASHME/STASHME.md) | TBD |
-| [SCRIPTS-004](features/features.yml) | Git + GitHub repository creator | shipped | [`git_init.sh`](git_init.sh) · `README.md#git-init` | TBD |
-| [SCRIPTS-005](features/features.yml) | Safe directory rename | shipped | [`rename-directory.sh`](rename-directory.sh) · [`docs/rename-directory-quick-reference.md`](docs/rename-directory-quick-reference.md) | TBD |
-| [SCRIPTS-006](features/features.yml) | Python package bootstrap | shipped | [`create_package.sh`](create_package.sh) · `README.md#create-package` | TBD |
-| [SCRIPTS-007](features/features.yml) | Markdown prose unwrapper | shipped | [`tools/unwrap-prose.py`](tools/unwrap-prose.py) · [`tools/README.md`](tools/README.md) | TBD |
-| [SCRIPTS-008](features/features.yml) | install.sh standalone installer | shipped | [`install.sh`](install.sh) · [`README.md`](README.md) | TBD |
+| [SCRIPTS-001](features/features.yml) | Project initialization wizard | shipped | [`project-init.sh`](project-init.sh) · `README.md#project-initialization-wizard` | FR1, FR2, NFR1 |
+| [SCRIPTS-002](features/features.yml) | ForkMe repository forking/cloning | shipped | [`FORKME/forkme.sh`](FORKME/forkme.sh) · [`FORKME/FORKME.md`](FORKME/FORKME.md) | FR1, FR3 |
+| [SCRIPTS-003](features/features.yml) | StashMe multi-repo cloud stash | shipped | [`STASHME/stashme.sh`](STASHME/stashme.sh) · [`STASHME/STASHME.md`](STASHME/STASHME.md) | FR1, FR3, NFR1 |
+| [SCRIPTS-004](features/features.yml) | Git + GitHub repository creator | shipped | [`git_init.sh`](git_init.sh) · `README.md#git-init` | FR1, FR3, NFR1 |
+| [SCRIPTS-005](features/features.yml) | Safe directory rename | shipped | [`rename-directory.sh`](rename-directory.sh) · [`docs/rename-directory-quick-reference.md`](docs/rename-directory-quick-reference.md) | FR1, FR3, NFR1 |
+| [SCRIPTS-006](features/features.yml) | Python package bootstrap | shipped | [`create_package.sh`](create_package.sh) · `README.md#create-package` | FR1, NFR1 |
+| [SCRIPTS-007](features/features.yml) | Markdown prose unwrapper | shipped | [`tools/unwrap-prose.py`](tools/unwrap-prose.py) · [`tools/README.md`](tools/README.md) | FR1 |
+| [SCRIPTS-008](features/features.yml) | install.sh standalone installer | shipped | [`install.sh`](install.sh) · [`README.md`](README.md) | FR1, NFR1, NFR2 |
 | [SCRIPTS-009](features/features.yml) | install.sh --uninstall | planned | [`install.sh`](install.sh) · [`README.md`](README.md) | FR4 |
 | [SCRIPTS-010](features/features.yml) | Shell completions for the toolbelt | planned | `completions/` · [`README.md`](README.md) | FR5 |
+| [SCRIPTS-011](features/features.yml) | Missions in constitution §1 | planned | [`docs/constitution.md`](docs/constitution.md) | §1.1 |
 
 **Requirement → feature trace**
 
 | Requirement | Features |
 | --- | --- |
-| TBD | SCRIPTS-001, SCRIPTS-002, SCRIPTS-003, SCRIPTS-004, SCRIPTS-005, SCRIPTS-006, SCRIPTS-007, SCRIPTS-008 |
+| FR1 | SCRIPTS-001, SCRIPTS-002, SCRIPTS-003, SCRIPTS-004, SCRIPTS-005, SCRIPTS-006, SCRIPTS-007, SCRIPTS-008 |
+| FR2 | SCRIPTS-001 |
+| NFR1 | SCRIPTS-001, SCRIPTS-003, SCRIPTS-004, SCRIPTS-005, SCRIPTS-006, SCRIPTS-008 |
+| FR3 | SCRIPTS-002, SCRIPTS-003, SCRIPTS-004, SCRIPTS-005 |
+| NFR2 | SCRIPTS-008 |
 | FR4 | SCRIPTS-009 |
 | FR5 | SCRIPTS-010 |
+| §1.1 | SCRIPTS-011 |
 <!-- features:end -->
 
 ## 5. Requirements
@@ -88,7 +105,6 @@ Every user-facing capability has a stable id in the feature catalog [`features/f
 
 ## 7. Roadmap / open questions
 
-- `features/features.yml` is still a TODO placeholder — feature index TBD
 - Supported OS matrix: TBD
 
 ## 8. Links

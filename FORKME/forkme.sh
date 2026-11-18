@@ -624,20 +624,23 @@ strategy_filetype() {
         
         # Build find command to DELETE files NOT matching specified types
         # We need to find files that don't match ANY of the specified extensions
-        local find_cmd="find \"$target_dir\" -type f ! -path \"*/.git/*\" \\( "
+        # An argv array, never a string re-parsed as shell: each extension stays one
+        # -name operand, so it cannot add a find primary (parse_arguments has
+        # already rejected anything but [A-Za-z0-9]).
+        local find_args=(find "$target_dir" -type f ! -path "*/.git/*" "(")
         local first=true
         for ext in "${FILE_TYPES[@]}"; do
             if [[ "$first" == true ]]; then
-                find_cmd+="! -name \"*.$ext\""
                 first=false
             else
-                find_cmd+=" -a ! -name \"*.$ext\""
+                find_args+=(-a)
             fi
+            find_args+=(! -name "*.$ext")
         done
-        find_cmd+=" \\) -delete"
-        
-        log_debug "Executing: $find_cmd"
-        eval "$find_cmd"
+        find_args+=(")" -delete)
+
+        log_debug "Executing: $(printf '%q ' "${find_args[@]}")"
+        "${find_args[@]}"
         
         # Remove empty directories
         find "$target_dir" -type d -empty ! -path "*/.git/*" -delete
@@ -1710,6 +1713,15 @@ parse_arguments() {
                 ;;
             --file-types)
                 IFS=',' read -ra FILE_TYPES <<< "$2"
+                # Each entry becomes part of a `find -delete` expression, so
+                # only plain extensions are accepted.
+                local ext
+                for ext in "${FILE_TYPES[@]}"; do
+                    if [[ ! "$ext" =~ ^[A-Za-z0-9]+$ ]]; then
+                        log_error "Invalid --file-types entry '$ext': use letters and digits only, comma-separated (e.g. py,js,md)"
+                        exit 1
+                    fi
+                done
                 shift 2
                 ;;
             --include)
