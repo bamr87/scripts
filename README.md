@@ -36,7 +36,7 @@ cd scripts
 Then, from the checkout:
 
 ```bash
-# install: none; every tool runs from the checkout (./install.sh only puts project-wizard on PATH, see Installation)
+# install: none; every tool runs from the checkout (./install.sh only puts project-wizard on PATH, --uninstall reverses it; see Installation)
 ./project-init.sh --help                                          # every tool prints its own flags with --help
 tests/smoke.sh                                                    # offline safety smoke (sandboxed HOME, stub gh and git, the --dry-run contracts); CI: smoke.yml
 ./git_init.sh --headless -n previewme --dry-run                   # preview, no side effects (tests/smoke.sh holds this contract)
@@ -62,11 +62,16 @@ cd /path/to/bamr87        # the hub checkout
 ```bash
 git clone https://github.com/bamr87/scripts.git
 cd scripts
+./install.sh --dry-run   # optional: print every write and change nothing
 ./install.sh
 source ~/.zshrc          # or ~/.bashrc
 ```
 
-Running both is harmless (the symlinks are idempotent), but redundant — the hub's setup is a strict superset for CLI installation.
+The rc file is picked from your login shell (`$SHELL`) and gets its `PATH` line only once; `--no-shell-rc` leaves your rc files alone. `./install.sh --help` lists every flag.
+
+Don't run both. The hub's setup is a strict superset for CLI installation, so if `~/.local/bin/project-wizard` already exists and is not this checkout's link (the hub's, say), `install.sh` stops before writing anything and prints where the existing one points; pass `--force` only if you want `project-wizard` to point at this checkout instead.
+
+To undo the standalone install, run `./install.sh --uninstall` (add `--dry-run` to preview it). It removes `~/.local/bin/project-wizard` only when it points to this checkout, takes the `PATH` block out of `~/.zshrc` and `~/.bashrc` after copying each to `<rc>.bak`, and asks before deleting `~/.project-wizard/`, which holds your templates and config; with no terminal to ask it keeps the directory, and `--purge` deletes it without asking. A second run changes nothing.
 
 Every script also runs directly with no installation at all; each prints its options with `--help`.
 
@@ -220,7 +225,7 @@ The [docs index](docs/README.md) lists every document with a one-line summary: t
 
 ## ✅ Development
 
-The gates are ShellCheck, the offline smoke test [`tests/smoke.sh`](tests/smoke.sh) (side-effect-free `--help` for every tool, `CREATE_GITHUB_REPO` / `PUSH_TO_GITHUB` honored, and the `--dry-run` of `git_init.sh`, `forkme.sh`, `stashme.sh`, `project-init.sh`, `rename-directory.sh` and `create_package.sh` writing nothing and making no `gh` call, `git` push, pull, fetch or clone, or `docker stop` (`project-init.sh`'s even when a sourced `./.env` or `--config` sets `DRY_RUN=false`), while a real stash into local bare remotes still reaches its summary, `rename-directory.sh --yes` renames with no stdin, `rename-directory.sh` names the containers it already stopped when piped answers run out, and `create_package.sh` refuses a non-empty target without `--force`; run against a sandboxed `HOME` with recording `gh`, `git` and `docker` stubs), the markdown one-paragraph-per-line rule and the docs index check, all in the [Quick start](#quick-start) block. In CI, [`smoke.yml`](.github/workflows/smoke.yml) runs ShellCheck and the smoke test (the hub's shared `standard-ci.yml` shellchecks nothing here), [`markdown-oneline.yml`](.github/workflows/markdown-oneline.yml) enforces the prose rule and [`ci.yml`](.github/workflows/ci.yml) calls the hub's shared `standard-ci.yml`. [`claude.yml`](.github/workflows/claude.yml) is the `@claude` handler, and `conformance.yml`, `release.yml` (release-please) and `verify.yml` are likewise thin callers of hub workflows. Conventions for new scripts, commits and branches live in [AGENTS.md](AGENTS.md).
+The gates are ShellCheck, the offline smoke test [`tests/smoke.sh`](tests/smoke.sh) (side-effect-free `--help` for every tool, `CREATE_GITHUB_REPO` / `PUSH_TO_GITHUB` honored, `install.sh`'s `--dry-run`, `--force` and `--uninstall` contracts, and the `--dry-run` of `git_init.sh`, `forkme.sh`, `stashme.sh`, `project-init.sh`, `rename-directory.sh` and `create_package.sh` writing nothing and making no `gh` call, `git` push, pull, fetch or clone, or `docker stop` (`project-init.sh`'s even when a sourced `./.env` or `--config` sets `DRY_RUN=false`), while a real stash into local bare remotes still reaches its summary, `rename-directory.sh --yes` renames with no stdin, `rename-directory.sh` names the containers it already stopped when piped answers run out, and `create_package.sh` refuses a non-empty target without `--force`; run against a sandboxed `HOME` with recording `gh`, `git` and `docker` stubs), the markdown one-paragraph-per-line rule and the docs index check, all in the [Quick start](#quick-start) block. In CI, [`smoke.yml`](.github/workflows/smoke.yml) runs ShellCheck and the smoke test (the hub's shared `standard-ci.yml` shellchecks nothing here), [`markdown-oneline.yml`](.github/workflows/markdown-oneline.yml) enforces the prose rule and [`ci.yml`](.github/workflows/ci.yml) calls the hub's shared `standard-ci.yml`. [`claude.yml`](.github/workflows/claude.yml) is the `@claude` handler, and `conformance.yml`, `release.yml` (release-please) and `verify.yml` are likewise thin callers of hub workflows. Conventions for new scripts, commits and branches live in [AGENTS.md](AGENTS.md).
 
 ## Contributing
 
