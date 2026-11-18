@@ -224,7 +224,7 @@ The gates are ShellCheck, the offline smoke test [`tests/smoke.sh`](tests/smoke.
 
 ## Contributing
 
-Contributions are welcome via pull request. Use [Conventional Commits](https://www.conventionalcommits.org/) and keep the CI checks green. The fleet-wide workflow is described in the hub's [CONTRIBUTING.md](https://github.com/bamr87/bamr87/blob/main/CONTRIBUTING.md). AI agents start with [AGENTS.md](AGENTS.md); [CLAUDE.md](CLAUDE.md) imports it for Claude Code. This repo is a submodule of the [bamr87/bamr87 dash](https://github.com/bamr87/bamr87), so changes land here first.
+Contributions are welcome via pull request. Use [Conventional Commits](https://www.conventionalcommits.org/) and keep the CI checks green. The fleet-wide workflow is described in the hub's [CONTRIBUTING.md](https://github.com/bamr87/bamr87/blob/main/CONTRIBUTING.md). To catch the CI gates before you push, run `pip install pre-commit && pre-commit install` once: [`.pre-commit-config.yaml`](.pre-commit-config.yaml) runs ShellCheck (`--severity=warning`), the one-paragraph-per-line prose check and the docs index check on what you commit (`pre-commit run --all-files` runs them on everything). AI agents start with [AGENTS.md](AGENTS.md); [CLAUDE.md](CLAUDE.md) imports it for Claude Code. This repo is a submodule of the [bamr87/bamr87 dash](https://github.com/bamr87/bamr87), so changes land here first.
 
 ## Changelog
 
