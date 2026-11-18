@@ -2,7 +2,7 @@
 
 # scripts
 
-> Standalone Bash utilities (plus one Python tool) for project scaffolding, GitHub repository management and multi-repo maintenance.
+> scripts' direction is to become the ultimate open home for all things project and repository automation: data, tools, resources and transparency, with standalone Bash utilities for scaffolding, GitHub management and multi-repo maintenance, for everyone ([constitution](docs/constitution.md) §1).
 
 ## What this repo is
 
@@ -15,9 +15,9 @@ Pure Bash 4+ plus one Python 3 script; nothing to install or build.
 ```bash
 # install: none; every tool runs from the checkout (./install.sh only puts project-wizard on PATH, --uninstall reverses it; see Installation)
 ./project-init.sh --help                                          # every tool prints its own flags with --help
-tests/smoke.sh                                                    # offline safety smoke (sandboxed HOME, stub gh); CI: smoke.yml
-./git_init.sh --headless -n previewme --dry-run                   # smoke test, no side effects
-./STASHME/stashme.sh --dry-run                                    # smoke test, no side effects
+tests/smoke.sh                                                    # offline safety smoke (sandboxed HOME, stub gh and git, the --dry-run contracts); CI: smoke.yml
+./git_init.sh --headless -n previewme --dry-run                   # preview, no side effects (tests/smoke.sh holds this contract)
+./STASHME/stashme.sh --dry-run                                    # preview, no side effects (tests/smoke.sh holds this contract)
 shellcheck --severity=warning *.sh FORKME/forkme.sh STASHME/stashme.sh tests/*.sh   # lint (.shellcheckrc disables SC2034/SC2086/SC1091)
 python3 tools/unwrap-prose.py --check                             # markdown one-paragraph-per-line (fix with --write)
 python3 tools/docs_index.py --check                               # docs/README.md index is current (rebuild with --write)
@@ -27,14 +27,14 @@ python3 tools/docs_index.py --check                               # docs/README.
 
 | Path | What |
 | --- | --- |
-| `project-init.sh` | Project scaffolding wizard (Django, React, Node, Python, custom; optional Docker, CI, license, GitHub repo); configured by `.env` / `--config` from `.env.example` |
+| `project-init.sh` | Project scaffolding wizard (Django, React, Node, Python, custom; optional Docker, CI, license, GitHub repo; `--dry-run`); configured by `.env` / `--config` from `.env.example` |
 | `install.sh` | Standalone installer: puts `project-wizard` on `PATH` and creates `~/.project-wizard/`; `--dry-run` previews it, `--uninstall` reverses it, and it never replaces a `project-wizard` that is not its own without `--force` |
 | `git_init.sh` | Interactive/headless git + GitHub repo creator (prefers `gh`, falls back to `npx degit`; gitignore.io; `--dry-run`) |
 | `forkme.sh` → `FORKME/forkme.sh` | Forking/cloning utility with 10 strategies; docs in `FORKME/` |
 | `STASHME/stashme.sh` | Multi-repo cloud stash to timestamped `stashme/…` branches, with `--dry-run`, `--restore`, `--cleanup`; docs in `STASHME/` |
-| `rename-directory.sh` | Safe directory rename with git/Docker pre-flight checks and optional backup ([quick reference](docs/rename-directory-quick-reference.md)) |
-| `create_package.sh` | Bootstraps a Python package repo from `microsoft/python-package-template` |
-| `tests/` | `smoke.sh`: the offline safety contract (side-effect-free `--help`, `CREATE_GITHUB_REPO` / `PUSH_TO_GITHUB` honored, `install.sh`'s `--dry-run`, `--force` and `--uninstall` contracts), run by `smoke.yml` |
+| `rename-directory.sh` | Safe directory rename with git/Docker pre-flight checks and optional backup; `--dry-run`, unattended `--yes` / `--backup` / `--no-backup` ([quick reference](docs/rename-directory-quick-reference.md)) |
+| `create_package.sh` | Bootstraps a Python package repo from `microsoft/python-package-template`; `--dry-run`, and `--force` to overlay a non-empty target |
+| `tests/` | `smoke.sh`: the offline safety contract (side-effect-free `--help`, `CREATE_GITHUB_REPO` / `PUSH_TO_GITHUB` honored, `install.sh`'s `--dry-run`, `--force` and `--uninstall` contracts, input treated as data and never `eval`ed or sourced, the `--dry-run` of every tool that has one writing nothing and making no `gh`, `git` network or `docker stop` call, `project-init.sh`'s even when a sourced `.env` or `--config` sets `DRY_RUN=false`, a real stash reaching its summary, `rename-directory.sh --yes` with no stdin and its report of containers already stopped when piped answers run out, `create_package.sh` refusing a non-empty target without `--force`), run by `smoke.yml` |
 | `tools/` | `unwrap-prose.py` (vendored prose gate) and `docs_index.py` (vendored docs index generator) |
 | `docs/` | Docs index, ADRs (`docs/adr/`), guides |
 | `features/`, `verify/` | Feature index and the verify kit's scenarios (hub kit) |

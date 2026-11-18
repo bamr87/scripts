@@ -76,7 +76,9 @@ RESTORE_MODE=false
 CLEANUP_MODE=false
 SUMMARY_FILE=""
 
-# Statistics - Initialize after parsing
+# Statistics - Initialize after parsing. Bump them with x=$((x + 1)), never a
+# bare post-increment command: one from 0 evaluates to 0, returns status 1, and
+# set -e then kills the script on the first repository (bash 4.1+; issue #32).
 repos_found=0
 repos_with_changes=0
 repos_stashed=0
@@ -370,20 +372,21 @@ find_git_repos() {
     
     log_step "Searching for git repositories in: $base_dir" >&2
     
-    # Build find command
-    local find_cmd="find \"$base_dir\" -maxdepth $MAX_DEPTH -type d -name .git"
-    
+    # Build find as an argv array, never a string re-parsed as shell (MAX_DEPTH is
+    # validated as an integer in parse_args).
+    local find_args=(find "$base_dir" -maxdepth "$MAX_DEPTH" -type d -name .git)
+
     if [[ "$INCLUDE_HIDDEN" != true ]]; then
-        find_cmd="find \"$base_dir\" -maxdepth $MAX_DEPTH -type d -name .git -not -path '*/.*/*'"
+        find_args+=(-not -path '*/.*/*')
     fi
-    
+
     # Execute find and extract parent directories
     while IFS= read -r git_dir; do
         local repo_dir
         repo_dir=$(dirname "$git_dir")
         repos+=("$repo_dir")
         log_debug "Found repo: $repo_dir" >&2
-    done < <(eval "$find_cmd" 2>/dev/null | sort)
+    done < <("${find_args[@]}" 2>/dev/null | sort)
     
     repos_found=${#repos[@]}
     
@@ -410,11 +413,11 @@ process_repo() {
     # Check for changes
     if ! has_changes "$repo_dir"; then
         log_debug "  No uncommitted changes, skipping"
-        ((repos_skipped++))
+        repos_skipped=$((repos_skipped + 1))
         return 0
     fi
     
-    ((repos_with_changes++))
+    repos_with_changes=$((repos_with_changes + 1))
     
     local change_count
     change_count=$(get_change_count "$repo_dir")
@@ -435,14 +438,14 @@ process_repo() {
     # Check for remote
     if ! has_remote "$repo_dir"; then
         log_warning "  No remote 'origin' configured, skipping"
-        ((repos_skipped++))
+        repos_skipped=$((repos_skipped + 1))
         return 0
     fi
     
     # Interactive confirmation
     if ! confirm_action "  Stash changes in $repo_name?"; then
         log_info "  Skipped by user"
-        ((repos_skipped++))
+        repos_skipped=$((repos_skipped + 1))
         return 0
     fi
     
@@ -462,16 +465,16 @@ process_repo() {
     # Stash the changes
     if ! stash_repo_changes "$repo_dir" "$branch_name" "$original_branch"; then
         log_error "  Failed to stash changes"
-        ((repos_failed++))
+        repos_failed=$((repos_failed + 1))
         return 1
     fi
     
-    ((repos_stashed++))
+    repos_stashed=$((repos_stashed + 1))
     
     # Push if enabled
     if [[ "$PUSH_IMMEDIATELY" == true ]]; then
         if push_stash_branch "$repo_dir" "$branch_name"; then
-            ((repos_pushed++))
+            repos_pushed=$((repos_pushed + 1))
             log_success "  Pushed to origin/$branch_name"
         else
             log_warning "  Failed to push, changes saved locally only"
@@ -543,12 +546,13 @@ push_stash_branch() {
     
     cd "$repo_dir" || return 1
     
-    local push_cmd="git push origin $branch_name"
-    [[ "$FORCE_PUSH" == true ]] && push_cmd="git push --force origin $branch_name"
-    
-    log_debug "  Pushing: $push_cmd"
-    
-    if ! eval "$push_cmd" 2>/dev/null; then
+    local push_args=(git push)
+    [[ "$FORCE_PUSH" == true ]] && push_args+=(--force)
+    push_args+=(origin "$branch_name")
+
+    log_debug "  Pushing: $(printf '%q ' "${push_args[@]}")"
+
+    if ! "${push_args[@]}" 2>/dev/null; then
         cd "$ORIGINAL_DIR"
         return 1
     fi
@@ -748,6 +752,11 @@ parse_arguments() {
                 ;;
             --max-depth)
                 MAX_DEPTH="$2"
+                # It becomes a `find -maxdepth` operand: digits only.
+                if [[ ! "$MAX_DEPTH" =~ ^[0-9]+$ ]]; then
+                    log_error "Invalid --max-depth '$MAX_DEPTH': expected a non-negative integer"
+                    exit 1
+                fi
                 shift 2
                 ;;
             --include-hidden)

@@ -12,7 +12,7 @@
 
 | Document | What it covers |
 | --- | --- |
-| [`AGENTS.md`](../AGENTS.md) | Standalone Bash utilities (plus one Python tool) for project scaffolding, GitHub repository management and multi-repo maintenance. |
+| [`AGENTS.md`](../AGENTS.md) | scripts' direction is to become the ultimate open home for all things project and repository automation: data, tools, resources and transparency, with standalone Bash utilities for scaffolding, GitHub management and multi-repo maintenance… |
 | [`CHANGELOG.md`](../CHANGELOG.md) | Release history: the notable changes in each version, newest first. |
 | [`SECURITY.md`](../SECURITY.md) | Which version is supported (the tip of main) and how to report a vulnerability privately. |
 | [`PRD.md`](../PRD.md) | The product requirements for bamr87/scripts: the problem, users, goals, features, requirements, success measures and open questions. |
@@ -25,7 +25,7 @@
 | Document | What it covers |
 | --- | --- |
 | [`docs/constitution.md`](constitution.md) | The rules every change to this repo must satisfy, whoever makes it — a human or an AI agent. Agents read this before [AGENTS.md](../AGENTS.md) conventions, the [PRD](../PRD.md), or the [feature catalog](../features/features.yml). Ratified… |
-| [`docs/rename-directory-quick-reference.md`](rename-directory-quick-reference.md) | How to use rename-directory.sh: common renames, the pre-flight checks and prompts, what is preserved, follow-up steps and recovering from a backup. |
+| [`docs/rename-directory-quick-reference.md`](rename-directory-quick-reference.md) | How to use rename-directory.sh: common renames, previews and unattended runs, the pre-flight checks and prompts, what is preserved, follow-up steps and recovering from a backup. |
 | [`docs/adr/`](adr/README.md) | The architecture decision log for this repo: when to write an ADR, the format, and the list of decisions. |
 | [`docs/amendments/`](amendments/README.md) | The append-only log of changes to [the constitution](constitution.md). |
 

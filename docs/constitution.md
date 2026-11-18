@@ -6,11 +6,17 @@
 > Agents read this before [AGENTS.md](../AGENTS.md) conventions, the [PRD](../PRD.md), or the
 > [feature catalog](../features/features.yml). Ratified by merged PR; amended only per § 8.
 
-## 1. Mission
+## 1. Missions
 
-A standalone collection of Bash command-line utilities (plus one Python tool) for project bootstrapping, GitHub repository management and multi-repo maintenance. No build and no dependency install; every script is self-contained. It is also vendored as a submodule of the bamr87 dash, which installs the scripts onto `PATH`.
+scripts' direction is to become the ultimate open home for all things project and repository automation — data, tools, resources and transparency, gathered in one place that anyone can inspect and reuse.
 
-_Source: [PRD.md](../PRD.md)._
+1. **Provide data, tools, resources and transparency for all stakeholders, maintainers, automation practitioners and the general public.** Maintainers, contributors, automation builders, and the general public are first-class audiences. The aim is a shared, open commons: the same scripts, the same tools, and the same trail of evidence for everyone.
+2. **Make project bootstrapping, GitHub repository management and multi-repo maintenance possible with standalone, self-contained tools.** No build and no dependency install; every script can be read, copied and run on its own. The collection is Bash command-line utilities plus one Python tool.
+3. **Put those tools on every maintainer's PATH, and make operating a fleet of repos effortless and inspectable.** The collection is also vendored as a submodule of the bamr87 dash, which installs the scripts onto `PATH` — an open toolkit for working with all things project and repository automation.
+
+These missions set the course; they do not claim the work is finished. They serve the existing constitution and PRD purpose: self-contained utilities with no build step, vendored into the dash. The earlier mission paragraph is absorbed into these three. Every feature must trace to them.
+
+_Source: [../PRD.md](../PRD.md) §1.1._
 
 ## 2. Invariants (non-negotiable)
 
