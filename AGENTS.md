@@ -46,7 +46,7 @@ python3 tools/docs_index.py --check                               # docs/README.
 ## Conventions
 
 - **Backlog of record:** GitHub Issues with the fleet labels (`.github/sdlc.yml`, `backlog.mode: issues`). Pick up issues labelled `agent:ready`; never touch `agent:hold` or `human-review`.
-- **Definition of Done:** the fleet default pull request checklist (this repo has no `.github/pull_request_template.md`), plus shellcheck clean and docs matching the script's flags.
+- **Definition of Done:** the checklist in `.github/pull_request_template.md`: Conventional Commit title, `shellcheck --severity=warning` clean, `tests/smoke.sh` passing, the README tool index and tool docs matching `--help`, and `CHANGELOG.md` untouched.
 - **Decisions:** ADRs in `docs/adr/NNNN-slug.md`, indexed in `docs/adr/README.md`.
 - **Commits:** Conventional Commits, `type(scope): description` (`feat fix docs refactor test chore ci`). The PR title is the squash subject.
 - **Branches:** `feature/`, `fix/`, `docs/`, `refactor/` or `test/` off `main` (the default branch); open a PR, never push to `main`.
