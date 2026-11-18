@@ -19,15 +19,15 @@ repo: bamr87/scripts
 features:
   - id: SCRIPTS-001
     title: "Project initialization wizard"
-    description: "Scaffold a Django, React, Node, Python, or custom project — optionally with Docker, CI, a license, and a GitHub repo — interactively or from flags/env vars."
+    description: "Scaffold a Django, React, Node, Python, or custom project — optionally with Docker, CI, a license, and a GitHub repo — interactively or from flags/env vars; --dry-run prints the plan without creating anything or calling gh."
     implemented: true
     status: shipped
-    prd: [FR1, FR2, NFR1]
+    prd: [FR1, FR2, FR3, NFR1]
     surface: cli
     link: "project-init.sh"
     docs: "README.md#project-initialization-wizard"
     tags: [scaffolding]
-    tests: []
+    tests: [tests/smoke.sh]
     scenarios: []
     evidence: []
   - id: SCRIPTS-002
@@ -40,7 +40,7 @@ features:
     link: "FORKME/forkme.sh"
     docs: "FORKME/FORKME.md"
     tags: [github]
-    tests: []
+    tests: [tests/smoke.sh]
     scenarios: []
     evidence: []
   - id: SCRIPTS-003
@@ -53,7 +53,7 @@ features:
     link: "STASHME/stashme.sh"
     docs: "STASHME/STASHME.md"
     tags: [multi-repo, backup]
-    tests: []
+    tests: [tests/smoke.sh]
     scenarios: []
     evidence: []
   - id: SCRIPTS-004
@@ -66,12 +66,12 @@ features:
     link: "git_init.sh"
     docs: "README.md#git-init"
     tags: [github, scaffolding]
-    tests: []
+    tests: [tests/smoke.sh]
     scenarios: []
     evidence: []
   - id: SCRIPTS-005
     title: "Safe directory rename"
-    description: "Rename a directory after git-status and Docker-container pre-flight checks, with an optional backup and post-rename verification."
+    description: "Rename a directory after git-status and Docker-container pre-flight checks, with an optional backup and post-rename verification; --dry-run previews it and --yes (with --backup or --no-backup) runs it unattended."
     implemented: true
     status: shipped
     prd: [FR1, FR3, NFR1]
@@ -79,20 +79,20 @@ features:
     link: "rename-directory.sh"
     docs: "docs/rename-directory-quick-reference.md"
     tags: [filesystem]
-    tests: []
+    tests: [tests/smoke.sh]
     scenarios: []
     evidence: []
   - id: SCRIPTS-006
     title: "Python package bootstrap"
-    description: "Seed a new Python package repo under ~/github/<name> from microsoft/python-package-template, staged but not committed."
+    description: "Seed a new Python package repo under ~/github/NAME from microsoft/python-package-template, staged but not committed; a non-empty target needs --force, and --dry-run prints the steps."
     implemented: true
     status: shipped
-    prd: [FR1, NFR1]
+    prd: [FR1, FR3, NFR1]
     surface: cli
     link: "create_package.sh"
     docs: "README.md#create-package"
     tags: [scaffolding, python]
-    tests: []
+    tests: [tests/smoke.sh]
     scenarios: []
     evidence: []
   - id: SCRIPTS-007

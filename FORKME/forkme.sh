@@ -968,7 +968,7 @@ display_repos() {
         fi
         printf "%-5s %-40s %-12s %6s %6s %8s %-6s %-8s\n" \
             "$idx" "$display_name" "$lang" "$stars" "$forks" "$size_display" "$is_fork" "$is_arch"
-        ((idx++))
+        idx=$((idx + 1))
     done
 
     # Total estimated size
@@ -1466,19 +1466,22 @@ batch_clone() {
     fi
 
     echo ""
+    # Count with x=$((x + 1)), never a bare post-increment command: one from 0
+    # returns status 1, which set -e turns into an exit before the first clone
+    # (bash 4.1+; issue #32).
     local current=0
     local succeeded=0
     local failed=0
 
     for repo in "${SELECTED_REPOS[@]}"; do
-        ((current++))
+        current=$((current + 1))
         local pct=$((current * 100 / total))
         printf "\r[%3d%%] (%d/%d) Cloning %-50s" "$pct" "$current" "$total" "$repo"
 
         if clone_single_repo "$repo" "$INTERACTIVE_TARGET"; then
-            ((succeeded++))
+            succeeded=$((succeeded + 1))
         else
-            ((failed++))
+            failed=$((failed + 1))
             log_error "Failed to clone: ${repo}"
         fi
     done

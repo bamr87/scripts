@@ -56,12 +56,12 @@ Every user-facing capability has a stable id in the feature catalog [`features/f
 
 | ID | Feature | Status | Where | Requirements |
 | --- | --- | --- | --- | --- |
-| [SCRIPTS-001](features/features.yml) | Project initialization wizard | shipped | [`project-init.sh`](project-init.sh) · `README.md#project-initialization-wizard` | FR1, FR2, NFR1 |
+| [SCRIPTS-001](features/features.yml) | Project initialization wizard | shipped | [`project-init.sh`](project-init.sh) · `README.md#project-initialization-wizard` | FR1, FR2, FR3, NFR1 |
 | [SCRIPTS-002](features/features.yml) | ForkMe repository forking/cloning | shipped | [`FORKME/forkme.sh`](FORKME/forkme.sh) · [`FORKME/FORKME.md`](FORKME/FORKME.md) | FR1, FR3 |
 | [SCRIPTS-003](features/features.yml) | StashMe multi-repo cloud stash | shipped | [`STASHME/stashme.sh`](STASHME/stashme.sh) · [`STASHME/STASHME.md`](STASHME/STASHME.md) | FR1, FR3, NFR1 |
 | [SCRIPTS-004](features/features.yml) | Git + GitHub repository creator | shipped | [`git_init.sh`](git_init.sh) · `README.md#git-init` | FR1, FR3, NFR1 |
 | [SCRIPTS-005](features/features.yml) | Safe directory rename | shipped | [`rename-directory.sh`](rename-directory.sh) · [`docs/rename-directory-quick-reference.md`](docs/rename-directory-quick-reference.md) | FR1, FR3, NFR1 |
-| [SCRIPTS-006](features/features.yml) | Python package bootstrap | shipped | [`create_package.sh`](create_package.sh) · `README.md#create-package` | FR1, NFR1 |
+| [SCRIPTS-006](features/features.yml) | Python package bootstrap | shipped | [`create_package.sh`](create_package.sh) · `README.md#create-package` | FR1, FR3, NFR1 |
 | [SCRIPTS-007](features/features.yml) | Markdown prose unwrapper | shipped | [`tools/unwrap-prose.py`](tools/unwrap-prose.py) · [`tools/README.md`](tools/README.md) | FR1 |
 | [SCRIPTS-008](features/features.yml) | install.sh standalone installer | shipped | [`install.sh`](install.sh) · [`README.md`](README.md) | FR1, NFR1, NFR2 |
 | [SCRIPTS-009](features/features.yml) | install.sh --uninstall | planned | [`install.sh`](install.sh) · [`README.md`](README.md) | FR4 |
@@ -75,7 +75,7 @@ Every user-facing capability has a stable id in the feature catalog [`features/f
 | FR1 | SCRIPTS-001, SCRIPTS-002, SCRIPTS-003, SCRIPTS-004, SCRIPTS-005, SCRIPTS-006, SCRIPTS-007, SCRIPTS-008 |
 | FR2 | SCRIPTS-001 |
 | NFR1 | SCRIPTS-001, SCRIPTS-003, SCRIPTS-004, SCRIPTS-005, SCRIPTS-006, SCRIPTS-008 |
-| FR3 | SCRIPTS-002, SCRIPTS-003, SCRIPTS-004, SCRIPTS-005 |
+| FR3 | SCRIPTS-001, SCRIPTS-002, SCRIPTS-003, SCRIPTS-004, SCRIPTS-005, SCRIPTS-006 |
 | NFR2 | SCRIPTS-008 |
 | FR4 | SCRIPTS-009 |
 | FR5 | SCRIPTS-010 |

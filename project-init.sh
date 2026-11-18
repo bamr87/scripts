@@ -68,7 +68,14 @@ readonly CONFIG_FILE="${HOME}/.project-wizard/config"
 readonly TEMPLATES_DIR="${HOME}/.project-wizard/templates"
 readonly DEFAULT_GITHUB_DIR="${HOME}/github"
 readonly LOG_FILE="${HOME}/.project-wizard/wizard.log"
+readonly INITIAL_COMMIT_MESSAGE="🎉 Initial commit - Project initialized with wizard"
 LOG_READY=false
+# --dry-run: resolve the configuration, print the plan, change nothing. Only the
+# flag sets it. The name is not DRY_RUN, which a project's own ./.env (sourced
+# in interactive mode) or a --config file often sets for something else, and
+# main() makes it readonly, so an assignment in a sourced file aborts the run
+# rather than turning the dry run into a real one.
+WIZARD_DRY_RUN=false
 
 # ==============================================================================
 # 🔧 CORE UTILITY FUNCTIONS
@@ -854,7 +861,7 @@ setup_git_and_github() {
     
     # Add files
     git add .
-    git commit -m "🎉 Initial commit - Project initialized with wizard"
+    git commit -m "$INITIAL_COMMIT_MESSAGE"
     
     # Create GitHub repository. Only an explicit "true" reaches GitHub, so a
     # typo'd value fails safe (local-only) rather than publishing.
@@ -937,6 +944,113 @@ EOF
 }
 
 # ==============================================================================
+# 🔍 DRY RUN
+# ==============================================================================
+
+# Print one command as the run would execute it: argv, shell-quoted with
+# printf %q so the line can be pasted as is, and never evaluated.
+plan() {
+    local line
+    line="$(printf '%q ' "$@")"
+    echo "    ${line% }"
+}
+
+# --dry-run: print what initialize_project, setup_git_and_github and the config
+# save in main() would do, and do none of it. No directory, file, log or git
+# repository is created and gh is never called, not even `gh repo view`. Keep
+# this in step with those functions.
+show_dry_run_plan() {
+    local visibility="--public"
+    if [ "$PRIVATE_REPO" = true ]; then visibility="--private"; fi
+
+    echo ""
+    log WARNING "DRY RUN: nothing below is created or run"
+    echo ""
+    echo "Create the project directory:"
+    plan mkdir -p "$PROJECT_DIR"
+    if [ -e "$PROJECT_DIR" ]; then
+        echo "    ($PROJECT_DIR already exists; the files below would be written into it)"
+    fi
+
+    echo "Scaffold the $PROJECT_TYPE project in it:"
+    case $PROJECT_TYPE in
+        django)
+            echo "    a venv, pip install of Django and its tooling, django-admin startproject $PROJECT_NAME,"
+            echo "    requirements.txt (pip freeze) and .env.example"
+            ;;
+        react)
+            plan npx create-react-app .
+            echo "    (falling back to: npm init -y)"
+            ;;
+        node)
+            plan npm init -y
+            ;;
+        python)
+            plan python3 -m venv venv
+            plan pip install --upgrade pip
+            ;;
+        custom)
+            plan mkdir -p src tests docs
+            ;;
+    esac
+
+    echo "Write these files:"
+    echo "    README.md"
+    case $LICENSE in
+        None) ;;
+        MIT) echo "    LICENSE (MIT)" ;;
+        Apache-2.0|Apache) echo "    LICENSE (Apache 2.0, downloaded with curl)" ;;
+        GPL-3.0|GPL) echo "    LICENSE (GPL 3.0, downloaded with curl)" ;;
+        *) echo "    (no LICENSE: unsupported license '$LICENSE')" ;;
+    esac
+    if [ "$SETUP_DOCKER" = true ]; then
+        case $PROJECT_TYPE in
+            django|python|node|react) echo "    Dockerfile" ;;
+        esac
+        echo "    docker-compose.yml"
+        echo "    .dockerignore"
+    fi
+    if [ "$SETUP_CI" = true ]; then
+        case $PROJECT_TYPE in
+            django|python|node|react) echo "    .github/workflows/ci.yml" ;;
+            *) echo "    .github/workflows/ (no workflow for a $PROJECT_TYPE project)" ;;
+        esac
+    fi
+    echo "    .gitignore"
+
+    echo "Commit it:"
+    if [ ! -d "$PROJECT_DIR/.git" ]; then
+        plan git init
+        plan git config user.name "$GITHUB_USERNAME"
+        plan git config user.email "$GITHUB_EMAIL"
+    fi
+    plan git add .
+    plan git commit -m "$INITIAL_COMMIT_MESSAGE"
+
+    if [ "$CREATE_GITHUB_REPO" != true ]; then
+        echo "Skip GitHub (CREATE_GITHUB_REPO=$CREATE_GITHUB_REPO): the project stays local-only."
+    elif ! command -v gh &>/dev/null; then
+        echo "Skip GitHub: gh is not installed, so the run would print the git remote add and git push steps."
+    else
+        echo "Create the GitHub repository, if gh repo view $GITHUB_USERNAME/$PROJECT_NAME finds none (not checked now):"
+        if [ "$PUSH_TO_GITHUB" = true ]; then
+            plan gh repo create "$GITHUB_USERNAME/$PROJECT_NAME" "$visibility" --description "$PROJECT_DESCRIPTION" --source=. --remote=origin --push
+        else
+            plan gh repo create "$GITHUB_USERNAME/$PROJECT_NAME" "$visibility" --description "$PROJECT_DESCRIPTION" --source=. --remote=origin
+        fi
+        echo "  or, if it already exists:"
+        plan git remote add origin "https://github.com/$GITHUB_USERNAME/$PROJECT_NAME.git"
+        if [ "$PUSH_TO_GITHUB" = true ]; then
+            plan git push -u origin main
+        fi
+    fi
+
+    echo "Save these choices to $CONFIG_FILE and log the run to $LOG_FILE."
+    echo ""
+    log SUCCESS "Dry run complete: nothing was written and GitHub was not contacted"
+}
+
+# ==============================================================================
 # 🚀 MAIN EXECUTION
 # ==============================================================================
 
@@ -972,6 +1086,15 @@ main() {
                 NON_INTERACTIVE=true
                 shift
                 ;;
+            --dry-run)
+                # Readonly at once, so a --config sourced after this flag
+                # cannot turn it off; a repeated --dry-run is a no-op.
+                if [ "$WIZARD_DRY_RUN" != true ]; then
+                    WIZARD_DRY_RUN=true
+                    readonly WIZARD_DRY_RUN
+                fi
+                shift
+                ;;
             -h|--help)
                 show_help
                 exit 0
@@ -983,8 +1106,14 @@ main() {
                 ;;
         esac
     done
+    # The command line has decided: the ./.env that run_wizard sources cannot
+    # change it either way.
+    readonly WIZARD_DRY_RUN
 
-    init_logging
+    # A dry run writes nothing, its log included.
+    if [ "$WIZARD_DRY_RUN" != true ]; then
+        init_logging
+    fi
 
     # Check for required tools
     log INFO "Checking system requirements..."
@@ -1015,6 +1144,11 @@ main() {
         django|react|node|python|custom) ;;
         *) error_exit "Unsupported project type '$PROJECT_TYPE' (expected: django, react, node, python, custom)" ;;
     esac
+
+    if [ "$WIZARD_DRY_RUN" = true ]; then
+        show_dry_run_plan
+        return 0
+    fi
 
     # Initialize the project
     initialize_project
@@ -1050,6 +1184,10 @@ OPTIONS:
     --name NAME           Set project name
     --dir DIRECTORY       Set project directory
     --non-interactive     Run in non-interactive mode (uses env vars)
+    --dry-run             Resolve the configuration (prompts included), then print
+                          every file, git and gh step the run would take; creates
+                          nothing, writes no log and never calls gh. Only this
+                          flag sets it: a DRY_RUN in ./.env or --config is ignored
     -h, --help            Show this help message
 
 --config is applied where it appears, so pass it first; flags after it win.
@@ -1084,6 +1222,9 @@ EXAMPLES:
 
     # Local-only scaffold: never touches GitHub
     CREATE_GITHUB_REPO=false PROJECT_NAME=sandbox $(basename "$0") --non-interactive
+
+    # Preview: print the plan, including the gh repo create call; change nothing
+    PROJECT_NAME=sandbox $(basename "$0") --non-interactive --dry-run
 
 For more information, visit: https://github.com/bamr87/scripts
 
