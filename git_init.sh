@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-# Set GitHub user from environment variable or fallback to system user
 set -euo pipefail
 
 # --- helpers and defaults
@@ -37,7 +36,7 @@ Usage: $(basename "$0") [options]
 
 Options:
     -n, --name NAME           Repository name (required in headless mode)
-    -u, --user USER           GitHub user/organization to use (defaults to USER or GITHUB_USER)
+    -u, --user USER           GitHub user/organization to use (default: \$GITHUB_USER, else \$USER)
     -d, --desc DESCRIPTION    Description for the repo
     -p, --private             Create private repository (default: public)
         --path DIR            Base directory for repositories (default: \$HOME/github)
@@ -46,7 +45,7 @@ Options:
     --scaffold TYPE           Basic scaffold type: none | jekyll | python | node | minimal
     -t, --template OWNER/REPO Create repo from a GitHub template (requires gh)
     --headless                Headless mode (don't ask interactive prompts)
-    --no-push                 Do not push to remote (local only)
+    --no-push                 Local only: create no GitHub repo and do not push
     --dry-run                 Print the actions that would be taken; change nothing
     -h, --help                Show this help and exit
 
@@ -323,32 +322,21 @@ if [ -n "$GITIGNORE" ]; then
     fi
 fi
 
-# license creation (fallback if gh not available)
+# license creation: always a local LICENSE file. GitHub has no API that writes a
+# license into a repo (and the remote doesn't exist yet at this point), so there is no gh path.
 if [ "$LICENSE" != "None" ] && [ "$LICENSE" != "none" ]; then
-    if $GH_CLI_AVAILABLE; then
-        # Try using GitHub CLI to create a license in repo via template -- requires remote to exist
-        echo "Creating license via gh (MIT or Apache-2.0 supported)"
-        if [ "$DRY_RUN" = true ]; then
-            echo "DRYRUN: Would attempt gh api -X PUT /repos/$GITHUB_USER/$REPO_NAME/license"
-        else
-            if ! gh api -X PUT "/repos/$GITHUB_USER/$REPO_NAME/license" >/dev/null 2>&1; then
-                echo "gh license creation failed; falling back to local LICENSE file"
-                create_local_license
-            fi
-        fi
+    if [ "$DRY_RUN" = true ]; then
+        echo "DRYRUN: Would generate a local $LICENSE LICENSE file"
     else
-        if [ "$DRY_RUN" = true ]; then
-            echo "DRYRUN: Would generate a local LICENSE file"
-        else
-            echo "gh not found; generating a simple license file"
-            create_local_license
-        fi
+        echo "Generating a $LICENSE LICENSE file"
+        create_local_license
     fi
 fi
 
 # If a GitHub template is requested use GH CLI or degit (if installed)
+# --no-push means local only: never create a GitHub repo, so a template comes via degit instead.
 if [ -n "$TEMPLATE" ]; then
-        if $GH_CLI_AVAILABLE; then
+        if $GH_CLI_AVAILABLE && [ "$FORCE_NO_PUSH" = false ]; then
         echo "Creating repo from template $TEMPLATE using gh"
         # create repo from template on GitHub then clone via gh
             if [ "$DRY_RUN" = true ]; then
@@ -385,8 +373,8 @@ fi
 
 # Set remote, branch, and push
 if [ "$MODE" = "headless" ]; then
-    # If gh available, try to create the remote repo non-interactively
-    if $GH_CLI_AVAILABLE; then
+    # If gh available, try to create the remote repo non-interactively (never with --no-push)
+    if $GH_CLI_AVAILABLE && [ "$FORCE_NO_PUSH" = false ]; then
         echo "Creating remote repo using gh CLI"
         if [ "$DRY_RUN" = true ]; then
             echo "DRYRUN: Would run gh repo create $GITHUB_USER/$REPO_NAME --$VISIBILITY --description '$REPO_DESC' --source=. --remote=origin --confirm"

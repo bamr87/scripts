@@ -6,7 +6,8 @@
 #              options, writes nothing under --dry-run, never replaces or
 #              removes a project-wizard that is not its own and --uninstall
 #              reverses it, project-init.sh honors CREATE_GITHUB_REPO and
-#              PUSH_TO_GITHUB, user input (prompt answers, .env and --config
+#              PUSH_TO_GITHUB, git_init.sh --no-push never creates a GitHub
+#              repo, user input (prompt answers, .env and --config
 #              files, --file-types, --max-depth, repo names) is data that never
 #              runs, and the --dry-run of git_init.sh, forkme.sh and
 #              stashme.sh writes nothing and reaches no network, while a real
@@ -50,6 +51,9 @@ echo "gh \$*" >> "$WORK/gh-calls.log"
 exit 0
 STUB
 chmod +x "$WORK/bin/gh"
+# An npx that does nothing, so git_init.sh's degit template fallback stays offline.
+printf '#!/usr/bin/env bash\nexit 0\n' > "$WORK/bin/npx"
+chmod +x "$WORK/bin/npx"
 
 # A git that records every network subcommand (push, pull, fetch, clone,
 # ls-remote) and swallows it, so a dry run that would reach a remote is caught
@@ -137,7 +141,17 @@ create_call="$(grep "repo create" "$WORK/gh-calls.log" || true)"
 if [ "$rc" -eq 0 ] && [[ "$create_call" == *--public*--push* ]]; then pass "defaults still create a public repo and push"
 else fail "default scaffold (exit $rc) called: ${create_call:-nothing}"; fi
 
-# 4. Shell completions (completions/, FR5): each file registers its command, and
+# 4. git_init.sh --no-push is local only: no gh repo create, with or without a template.
+for args in "" "-t octocat/template-repo"; do
+    # shellcheck disable=SC2086  # $args is deliberately word-split into flags
+    rc=0; sandboxed "$WORK/home" bash "$REPO/git_init.sh" --headless -n nopush -u smoke --license None --path "$WORK/repos" --no-push $args || rc=$?
+    label="git_init.sh --no-push${args:+ $args}"
+    if grep -q "repo create" "$WORK/gh-calls.log"; then fail "$label still called: $(cat "$WORK/gh-calls.log")"
+    elif [ ! -d "$WORK/repos/nopush/.git" ]; then fail "$label (exit $rc) made no local repo: $(tail -3 "$WORK/out.txt")"
+    else pass "$label never calls gh repo create"; fi
+    rm -rf "$WORK/repos"
+done
+# 5. Shell completions (completions/, FR5): each file registers its command, and
 #    `<command> --<TAB>` offers exactly the long flags the tool's --help lists, so
 #    a flag added to or dropped from a tool fails here until its completion follows.
 # Prints the words completions/<file> offers for a command line, one per line;
@@ -201,7 +215,7 @@ if command -v zsh >/dev/null 2>&1; then
 else
     echo "skip zsh is not installed, so completions/_toolbelt was not loaded"
 fi
-# 5. install.sh: --dry-run writes nothing, a re-run adds no second PATH line, a
+# 6. install.sh: --dry-run writes nothing, a re-run adds no second PATH line, a
 #    project-wizard that is not this checkout's link is never replaced without
 #    --force or removed by --uninstall, and --uninstall leaves only .bak files.
 #    SHELL is pinned so the rc file is always ~/.bashrc, whatever runs the suite.
@@ -279,7 +293,7 @@ fresh_home; mkdir -p "$IHOME/.local/bin"; ln -s "$FOREIGN" "$WIZARD_LINK"
 rc=0; installer --uninstall --purge || rc=$?
 if [ "$rc" -eq 0 ] && [ "$(readlink "$WIZARD_LINK")" = "$FOREIGN" ]; then pass "install.sh --uninstall never removes a foreign project-wizard link"
 else fail "install.sh --uninstall on a foreign link exited $rc and left project-wizard -> '$(readlink "$WIZARD_LINK" || true)'"; fi
-# 6. --dry-run changes nothing (issue #32): git_init.sh, forkme.sh and
+# 7. --dry-run changes nothing (issue #32): git_init.sh, forkme.sh and
 #    stashme.sh exit 0 and print their plan, write nothing under HOME or the
 #    working directory, and make no gh call and no git network call. A real
 #    stash over dirty repos still reaches its summary.
@@ -352,7 +366,7 @@ counters="$(cd "$REPO" && grep -nE '(^|[;&|[:space:]])\(\([[:space:]]*[A-Za-z_][
 if [ -z "$counters" ]; then pass "no tool bumps a counter with a bare post-increment that set -e turns into an exit"
 else fail "post-increment commands abort under set -e when the counter is 0: $counters"; fi
 
-# 7. The destructive tools preview and run unattended (issue #31, PRD FR3):
+# 8. The destructive tools preview and run unattended (issue #31, PRD FR3):
 #    project-init.sh, rename-directory.sh and create_package.sh take --dry-run
 #    (project-init.sh's survives a sourced DRY_RUN=false), rename-directory.sh
 #    takes --yes / --backup / --no-backup with no stdin and reports a stop it
@@ -486,7 +500,7 @@ if [ "$rc" -ne 0 ]; then fail "create_package.sh --force exited $rc: $(tail -3 "
 elif [ "$(cat "$WORK/home/github/pkg/existing.txt")" != keep ] || [ ! -d "$WORK/home/github/pkg/.git" ]; then fail "create_package.sh --force did not bootstrap over ~/github/pkg"
 elif ! grep -q "git clone --depth=1" "$WORK/git-calls.log"; then fail "create_package.sh --force never cloned the template"
 else pass "create_package.sh --force bootstraps over a non-empty ~/github/pkg"; fi
-# 8. Input is data, never shell (issue #29): prompt answers, ./.env and
+# 9. Input is data, never shell (issue #29): prompt answers, ./.env and
 #    --config files, --file-types, --max-depth and repo names never run a
 #    command or add a find primary. $SANDBOX is where an injection would land.
 SANDBOX="$WORK/inject"
