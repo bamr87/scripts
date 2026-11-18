@@ -1,0 +1,28 @@
+# Pre-commit hooks for bamr87/scripts (UPS-QA-06). They run the same checks as CI
+# (smoke.yml's shellcheck step, markdown-oneline.yml and the docs index check), so a
+# failure shows up before the push. All hooks are local and use the tools on your PATH,
+# so there are no third-party revisions to pin.
+#
+# Install: pip install pre-commit && pre-commit install
+# Run manually: pre-commit run --all-files
+# Needs: shellcheck, python3 (see the README's Development section).
+
+repos:
+  - repo: local
+    hooks:
+      - id: shellcheck
+        name: shellcheck (severity=warning)
+        entry: shellcheck --severity=warning
+        language: system
+        files: ^(?:[^/]+\.sh|FORKME/.*\.sh|STASHME/.*\.sh|tests/.*\.sh)$
+      - id: unwrap-prose
+        name: markdown one paragraph per line
+        entry: python3 tools/unwrap-prose.py --check
+        language: system
+        files: \.md$
+      - id: docs-index
+        name: docs index is fresh
+        entry: python3 tools/docs_index.py --check
+        language: system
+        files: ^docs/
+        pass_filenames: false
