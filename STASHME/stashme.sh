@@ -370,20 +370,21 @@ find_git_repos() {
     
     log_step "Searching for git repositories in: $base_dir" >&2
     
-    # Build find command
-    local find_cmd="find \"$base_dir\" -maxdepth $MAX_DEPTH -type d -name .git"
-    
+    # Build find as an argv array, never a string re-parsed as shell (MAX_DEPTH is
+    # validated as an integer in parse_args).
+    local find_args=(find "$base_dir" -maxdepth "$MAX_DEPTH" -type d -name .git)
+
     if [[ "$INCLUDE_HIDDEN" != true ]]; then
-        find_cmd="find \"$base_dir\" -maxdepth $MAX_DEPTH -type d -name .git -not -path '*/.*/*'"
+        find_args+=(-not -path '*/.*/*')
     fi
-    
+
     # Execute find and extract parent directories
     while IFS= read -r git_dir; do
         local repo_dir
         repo_dir=$(dirname "$git_dir")
         repos+=("$repo_dir")
         log_debug "Found repo: $repo_dir" >&2
-    done < <(eval "$find_cmd" 2>/dev/null | sort)
+    done < <("${find_args[@]}" 2>/dev/null | sort)
     
     repos_found=${#repos[@]}
     
@@ -543,12 +544,13 @@ push_stash_branch() {
     
     cd "$repo_dir" || return 1
     
-    local push_cmd="git push origin $branch_name"
-    [[ "$FORCE_PUSH" == true ]] && push_cmd="git push --force origin $branch_name"
-    
-    log_debug "  Pushing: $push_cmd"
-    
-    if ! eval "$push_cmd" 2>/dev/null; then
+    local push_args=(git push)
+    [[ "$FORCE_PUSH" == true ]] && push_args+=(--force)
+    push_args+=(origin "$branch_name")
+
+    log_debug "  Pushing: $(printf '%q ' "${push_args[@]}")"
+
+    if ! "${push_args[@]}" 2>/dev/null; then
         cd "$ORIGINAL_DIR"
         return 1
     fi
@@ -748,6 +750,11 @@ parse_arguments() {
                 ;;
             --max-depth)
                 MAX_DEPTH="$2"
+                # It becomes a `find -maxdepth` operand: digits only.
+                if [[ ! "$MAX_DEPTH" =~ ^[0-9]+$ ]]; then
+                    log_error "Invalid --max-depth '$MAX_DEPTH': expected a non-negative integer"
+                    exit 1
+                fi
                 shift 2
                 ;;
             --include-hidden)

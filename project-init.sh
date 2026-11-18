@@ -121,15 +121,57 @@ prompt_user() {
     local default=$2
     local var_name=$3
     local value
-    
+
+    # The answer is data: it is assigned verbatim (quotes, `;`, `$(...)` and
+    # backslashes included) and never parsed as shell.
+    [[ "$var_name" =~ ^[A-Z_][A-Z0-9_]*$ ]] || error_exit "prompt_user: invalid variable name '$var_name'"
+
     if [ -n "${default}" ]; then
-        read -p "$(echo -e ${CYAN}${prompt} ${RESET}[${default}]: )" value
+        read -r -p "$(echo -e "${CYAN}${prompt} ${RESET}[${default}]: ")" value
         value="${value:-$default}"
     else
-        read -p "$(echo -e ${CYAN}${prompt}: ${RESET})" value
+        read -r -p "$(echo -e "${CYAN}${prompt}: ${RESET}")" value
     fi
-    
-    eval "$var_name='$value'"
+
+    printf -v "$var_name" '%s' "$value"
+}
+
+# The only keys an env-style file may set: the ones this wizard reads. Other
+# keys (the reserved ones in .env.example, and anything like PATH or BASH_ENV
+# that would change how the wizard runs) are ignored.
+readonly ENV_FILE_KEYS=" PROJECT_TYPE PROJECT_NAME PROJECT_DESCRIPTION PROJECT_DIR GITHUB_USERNAME GITHUB_EMAIL SETUP_DOCKER SETUP_CI LICENSE PRIVATE_REPO NON_INTERACTIVE CREATE_GITHUB_REPO PUSH_TO_GITHUB "
+
+# Load an env-style file (./.env or --config FILE) as data, never as shell.
+# Reads `KEY=VALUE` lines with an optional `export ` prefix, blank lines and
+# `#` comments; a value may be wrapped in matching single or double quotes,
+# an unquoted value ends at ` #`, and a leading `~/` expands to $HOME.
+# `$(...)`, backticks and `$VAR` stay literal.
+load_env_file() {
+    local file=$1 line key value lineno=0
+    [ -f "$file" ] || error_exit "Config file not found: $file"
+    while IFS= read -r line || [ -n "$line" ]; do
+        lineno=$((lineno + 1))
+        line="${line%$'\r'}"
+        line="${line#"${line%%[![:space:]]*}"}"
+        [ -z "$line" ] && continue
+        [[ "$line" == \#* ]] && continue
+        [[ "$line" =~ ^export[[:space:]]+(.*)$ ]] && line="${BASH_REMATCH[1]}"
+        if [[ ! "$line" =~ ^([A-Za-z_][A-Za-z0-9_]*)=(.*)$ ]]; then
+            log WARNING "$file:$lineno: ignoring a line that is not KEY=VALUE"
+            continue
+        fi
+        key="${BASH_REMATCH[1]}"
+        value="${BASH_REMATCH[2]}"
+        [[ "$ENV_FILE_KEYS" == *" $key "* ]] || continue
+        if [[ "$value" =~ ^\"(.*)\"[[:space:]]*(#.*)?$ ]] || [[ "$value" =~ ^\'(.*)\'[[:space:]]*(#.*)?$ ]]; then
+            value="${BASH_REMATCH[1]}"
+        else
+            value="${value%%[[:space:]]#*}"
+            value="${value%"${value##*[![:space:]]}"}"
+        fi
+        [[ "${value:0:2}" == \~/ ]] && value="${HOME}/${value:2}"
+        printf -v "$key" '%s' "$value"
+    done < "$file"
 }
 
 prompt_yes_no() {
@@ -588,8 +630,8 @@ EOF
     
     # Check for environment variables first
     if [ -f .env ]; then
-        log INFO "Loading configuration from .env file..."
-        source .env
+        log INFO "Loading configuration from .env file (parsed as KEY=VALUE, never executed)..."
+        load_env_file .env
     fi
     
     # Project Type Selection
@@ -911,9 +953,7 @@ main() {
             --config)
                 # Load defaults from an env-style file (e.g. a copy of
                 # .env.example). CONFIG_FILE stays the "last used" save path.
-                [ -f "$2" ] || error_exit "Config file not found: $2"
-                # shellcheck source=/dev/null
-                source "$2"
+                load_env_file "$2"
                 shift 2
                 ;;
             --type)
@@ -1013,8 +1053,10 @@ OPTIONS:
     -h, --help            Show this help message
 
 --config is applied where it appears, so pass it first; flags after it win.
-Interactive mode also sources ./.env from the current directory; any
+Interactive mode also loads ./.env from the current directory; any
 variable it sets overrides the same value from flags or --config.
+Both files are parsed as KEY=VALUE lines, never sourced or executed: only
+the variables listed below are read, and \$(...) or backticks stay literal.
 
 ENVIRONMENT VARIABLES:
     PROJECT_TYPE          Type of project to create
