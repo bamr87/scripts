@@ -19,15 +19,15 @@ repo: bamr87/scripts
 features:
   - id: SCRIPTS-001
     title: "Project initialization wizard"
-    description: "Scaffold a Django, React, Node, Python, or custom project — optionally with Docker, CI, a license, and a GitHub repo — interactively or from flags/env vars."
+    description: "Scaffold a Django, React, Node, Python, or custom project — optionally with Docker, CI, a license, and a GitHub repo — interactively or from flags/env vars; --dry-run prints the plan without creating anything or calling gh."
     implemented: true
     status: shipped
-    prd: [TBD]
+    prd: [FR1, FR2, FR3, NFR1]
     surface: cli
     link: "project-init.sh"
     docs: "README.md#project-initialization-wizard"
     tags: [scaffolding]
-    tests: []
+    tests: [tests/smoke.sh]
     scenarios: []
     evidence: []
   - id: SCRIPTS-002
@@ -35,12 +35,12 @@ features:
     description: "Fork or clone a GitHub repository with one of 10 strategies (full, shallow, sparse, filetype, analysis, mirror, …) instead of a plain git clone."
     implemented: true
     status: shipped
-    prd: [TBD]
+    prd: [FR1, FR3]
     surface: cli
     link: "FORKME/forkme.sh"
     docs: "FORKME/FORKME.md"
     tags: [github]
-    tests: []
+    tests: [tests/smoke.sh]
     scenarios: []
     evidence: []
   - id: SCRIPTS-003
@@ -48,12 +48,12 @@ features:
     description: "Push uncommitted work across every repo under a directory tree to timestamped stashme/… remote branches, then list, restore, or clean them up."
     implemented: true
     status: shipped
-    prd: [TBD]
+    prd: [FR1, FR3, NFR1]
     surface: cli
     link: "STASHME/stashme.sh"
     docs: "STASHME/STASHME.md"
     tags: [multi-repo, backup]
-    tests: []
+    tests: [tests/smoke.sh]
     scenarios: []
     evidence: []
   - id: SCRIPTS-004
@@ -61,38 +61,38 @@ features:
     description: "Create a local git repo and, optionally, its GitHub remote (gh first, npx degit for templates, gitignore.io for .gitignore), interactively or headless with --dry-run."
     implemented: true
     status: shipped
-    prd: [TBD]
+    prd: [FR1, FR3, NFR1]
     surface: cli
     link: "git_init.sh"
     docs: "README.md#git-init"
     tags: [github, scaffolding]
-    tests: []
+    tests: [tests/smoke.sh]
     scenarios: []
     evidence: []
   - id: SCRIPTS-005
     title: "Safe directory rename"
-    description: "Rename a directory after git-status and Docker-container pre-flight checks, with an optional backup and post-rename verification."
+    description: "Rename a directory after git-status and Docker-container pre-flight checks, with an optional backup and post-rename verification; --dry-run previews it and --yes (with --backup or --no-backup) runs it unattended."
     implemented: true
     status: shipped
-    prd: [TBD]
+    prd: [FR1, FR3, NFR1]
     surface: cli
     link: "rename-directory.sh"
     docs: "docs/rename-directory-quick-reference.md"
     tags: [filesystem]
-    tests: []
+    tests: [tests/smoke.sh]
     scenarios: []
     evidence: []
   - id: SCRIPTS-006
     title: "Python package bootstrap"
-    description: "Seed a new Python package repo under ~/github/<name> from microsoft/python-package-template, staged but not committed."
+    description: "Seed a new Python package repo under ~/github/NAME from microsoft/python-package-template, staged but not committed; a non-empty target needs --force, and --dry-run prints the steps."
     implemented: true
     status: shipped
-    prd: [TBD]
+    prd: [FR1, FR3, NFR1]
     surface: cli
     link: "create_package.sh"
     docs: "README.md#create-package"
     tags: [scaffolding, python]
-    tests: []
+    tests: [tests/smoke.sh]
     scenarios: []
     evidence: []
   - id: SCRIPTS-007
@@ -100,7 +100,7 @@ features:
     description: "Check or rewrite markdown so each paragraph is one line, leaving Liquid, code fences, and tables intact; backs the markdown-oneline CI gate."
     implemented: true
     status: shipped
-    prd: [TBD]
+    prd: [FR1]
     surface: cli
     link: "tools/unwrap-prose.py"
     docs: "tools/README.md"
@@ -110,24 +110,25 @@ features:
     evidence: []
   - id: SCRIPTS-008
     title: "install.sh standalone installer"
-    description: "`install.sh` standalone installer (project-wizard only)"
+    description: "`install.sh` standalone installer (project-wizard only): `--dry-run` prints every write, `--no-shell-rc` skips the rc edit, and it refuses to replace a project-wizard that is not its own unless `--force` is given. Issue #30."
     implemented: true
     status: shipped
-    prd: [TBD]
+    prd: [FR1, NFR1, NFR2]
     surface: cli
     link: "install.sh"
     docs: "README.md"
+    tests: [tests/smoke.sh]
   - id: SCRIPTS-009
     title: "install.sh --uninstall"
     description: "Reverse install.sh: remove the project-wizard symlink (only if it points into this checkout), the PATH rc block (with .bak), and optionally ~/.project-wizard; supports --dry-run. Issue #34."
-    implemented: false
-    status: planned
+    implemented: true
+    status: shipped
     prd: [FR4]
     surface: cli
     link: "install.sh"
     docs: "README.md"
     tags: [install]
-    tests: []
+    tests: [tests/smoke.sh]
     scenarios: []
     evidence: []
   - id: SCRIPTS-010
@@ -143,3 +144,11 @@ features:
     tests: [tests/smoke.sh]
     scenarios: []
     evidence: []
+  - id: SCRIPTS-011
+    title: "Missions in constitution §1"
+    description: "Three product missions under one direction statement, ratified through amendment 0002."
+    implemented: false
+    status: planned
+    prd: ["§1.1"]
+    surface: docs
+    docs: "docs/constitution.md"
