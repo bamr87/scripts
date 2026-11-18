@@ -30,6 +30,6 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: shellcheck
-        run: shellcheck --severity=warning *.sh FORKME/forkme.sh STASHME/stashme.sh tests/*.sh
+        run: shellcheck --severity=warning ./*.sh FORKME/forkme.sh STASHME/stashme.sh tests/*.sh completions/*.bash
       - name: smoke
         run: tests/smoke.sh
