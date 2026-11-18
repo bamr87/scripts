@@ -260,16 +260,17 @@ for mode in .env --config; do
     else pass "project-init.sh --dry-run stays a dry run when $mode sets DRY_RUN=false"; fi
 done
 
-# The wizard's own flag variable is readonly: a sourced file that resets it
-# stops the run before anything is created.
+# The wizard's own flag variable is not one of the keys an env file may set
+# (the file is parsed as data, not sourced): a WIZARD_DRY_RUN=false in ./.env
+# is ignored and the run stays a dry run.
 { cat "$WORK/dry-env"; echo "WIZARD_DRY_RUN=false"; } > "$WORK/dry-env-reset"
 rm -rf "$WORK/projects/envx"; rc=0
 interactive "$WORK/dry-env-reset" "$WORK/enter-x10" env TERM=xterm bash "$REPO/project-init.sh" --dry-run || rc=$?
 left="$(side_effects | { grep -vx '\./\.env' || true; } | tr '\n' ' ')"
-if [ "$rc" -eq 0 ]; then fail "project-init.sh --dry-run exited 0 although ./.env reset WIZARD_DRY_RUN"
-elif ! grep -q "WIZARD_DRY_RUN: readonly variable" "$WORK/out.txt"; then fail "project-init.sh --dry-run with WIZARD_DRY_RUN reset stopped for another reason: $(tail -3 "$WORK/out.txt")"
-elif [ -e "$WORK/projects/envx" ] || [ -n "$left" ]; then fail "project-init.sh --dry-run with WIZARD_DRY_RUN reset left: $left"
-else pass "project-init.sh --dry-run stops, changing nothing, when a sourced .env resets its flag"; fi
+if [ "$rc" -ne 0 ]; then fail "project-init.sh --dry-run with WIZARD_DRY_RUN=false in ./.env exited $rc: $(tail -3 "$WORK/out.txt")"
+elif [ -e "$WORK/projects/envx" ] || [ -n "$left" ]; then fail "project-init.sh --dry-run with WIZARD_DRY_RUN=false in ./.env left: $left"
+elif ! grep -qE "gh repo create smoke/envx --public .*--push" "$WORK/out.txt"; then fail "project-init.sh --dry-run with WIZARD_DRY_RUN=false in ./.env printed no gh repo create line: $(tail -3 "$WORK/out.txt")"
+else pass "project-init.sh --dry-run stays a dry run when ./.env sets WIZARD_DRY_RUN=false"; fi
 
 # rename-directory.sh: a dirty git repo, and a running container named after it.
 mkdir -p "$WORK/rename"
