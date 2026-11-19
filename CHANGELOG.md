@@ -1,5 +1,37 @@
 # Changelog
 
+## [0.3.0](https://github.com/bamr87/scripts/compare/v0.2.1...v0.3.0) (2026-11-18)
+
+
+### Added
+
+* add --dry-run to project-init, rename-directory and create_package; --yes and --force guards ([dd51001](https://github.com/bamr87/scripts/commit/dd510013c58aef8d6dad93a960e54eec0e99c007))
+* **completions:** add bash and zsh tab completion for forkme, stashme and git-init ([267a94a](https://github.com/bamr87/scripts/commit/267a94ad1001a8370ea4eb809a80f5f2cc3c145a))
+* **completions:** add bash and zsh tab completion for forkme, stashme and git-init ([efcd021](https://github.com/bamr87/scripts/commit/efcd021255ae505288b4dd017c6e32ac630af912)), closes [#35](https://github.com/bamr87/scripts/issues/35)
+* **create_package:** add --dry-run and refuse a non-empty target without --force ([f02b9d3](https://github.com/bamr87/scripts/commit/f02b9d3c0ae31522b53a7e1c5d4b5be3cfa89a4c)), closes [#31](https://github.com/bamr87/scripts/issues/31)
+* **install:** add --dry-run, --no-shell-rc, --force and --uninstall to install.sh ([0fbbf29](https://github.com/bamr87/scripts/commit/0fbbf29bc8ebfd7782f3da2ba12d28a4c30cf8f4))
+* **install:** add --dry-run, --no-shell-rc, --force and --uninstall to install.sh ([9ca333a](https://github.com/bamr87/scripts/commit/9ca333a52d7ca203a7bfd6411819cffb76a7aaca))
+* **project-init:** add --dry-run that prints the plan and calls no gh ([aa54cd8](https://github.com/bamr87/scripts/commit/aa54cd8cc22fa0b8020578d1aadb435e54855ee1)), closes [#31](https://github.com/bamr87/scripts/issues/31)
+* **rename-directory:** add --dry-run and unattended --yes/--backup/--no-backup ([62430a8](https://github.com/bamr87/scripts/commit/62430a8c50fb190298817864d9509a6186994640)), closes [#31](https://github.com/bamr87/scripts/issues/31)
+
+
+### Fixed
+
+* keep project-init --dry-run when a sourced file sets DRY_RUN=false ([d23b801](https://github.com/bamr87/scripts/commit/d23b80172d9abe2a875dd6cd54bb0eb0212ccc03))
+* **security:** treat prompt, .env and flag input as data, never shell ([01057d5](https://github.com/bamr87/scripts/commit/01057d500e28d1a63d7fdcf47b4b0dbd3c389317))
+* **stashme,forkme:** bump counters without tripping set -e ([d9d1710](https://github.com/bamr87/scripts/commit/d9d1710a6bead119710165a107df7958af72a793)), closes [#32](https://github.com/bamr87/scripts/issues/32)
+* **stashme:** stop set -e aborting on the first repo; smoke-test the --dry-run contracts ([ddcd9f0](https://github.com/bamr87/scripts/commit/ddcd9f0b9ed68ffa1217a1cb1eb054c470537d28))
+
+
+### Documentation
+
+* add amendments summary line and a pull request template ([dc881d1](https://github.com/bamr87/scripts/commit/dc881d1e757a9a25350026dade0beca135fab102))
+* add amendments summary line and a pull request template ([9dc324b](https://github.com/bamr87/scripts/commit/9dc324b0cd70cead21fab101b93d2f909c4ddc6f))
+* **constitution:** state the missions in §1 (amendment 0002) ([efe2dd9](https://github.com/bamr87/scripts/commit/efe2dd913de63eac92c81901157d8cbca6a2b7ca))
+* **constitution:** state the missions in §1 (amendment 0002) ([7f16fe9](https://github.com/bamr87/scripts/commit/7f16fe97ba4b0450c87e6ef74963c36925bb530d))
+* **features:** trace SCRIPTS-001..008 to PRD requirements ([0697fc5](https://github.com/bamr87/scripts/commit/0697fc5b3d151ca155d6745d2a6bb0c122e202c5))
+* **features:** trace SCRIPTS-001..008 to PRD requirements ([fa39700](https://github.com/bamr87/scripts/commit/fa39700d976948229cb22b4d3dcf826430d5f543)), closes [#27](https://github.com/bamr87/scripts/issues/27)
+
 ## [0.2.1](https://github.com/bamr87/scripts/compare/v0.2.0...v0.2.1) (2026-11-12)
 
 
