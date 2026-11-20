@@ -21,7 +21,8 @@
 #              `docker` stubs, so nothing reaches GitHub, Docker or the
 #              caller's dotfiles. Also holds the shell completions in
 #              completions/ to each tool's --help: every long flag it lists,
-#              and no other, is offered.
+#              and no other, is offered. Ctrl-C and SIGTERM stop forkme.sh
+#              and stashme.sh with exit 130 / 143 after their cleanup.
 # Author: Amr Abdel-Motaleb <amr.abdel@gmail.com>
 # Created: 2026-10-27
 # Version: 1.0.0
@@ -565,5 +566,73 @@ rc=0; sandboxed "$WORK/home" env GITHUB_USER=smoke bash "$REPO/git_init.sh" --he
 expected="DRYRUN: mkdir -p $(printf '%q' "$WORK/home/github/it's-a-test")"
 if [ "$rc" -eq 0 ] && grep -qF "$expected" "$WORK/out.txt"; then pass "git_init --dry-run prints printf %q-quoted commands"
 else fail "git_init --dry-run (exit $rc) did not print [$expected]: $(grep DRYRUN "$WORK/out.txt" | head -2)"; fi
+
+# 10. Ctrl-C and SIGTERM stop the tool (issue #62): forkme.sh and stashme.sh
+#     exit 130 / 143 instead of running cleanup and carrying on with the next
+#     step, and cleanup still removes forkme's temporary clone. A slow git
+#     stub, ahead of the recording one on PATH, logs each push and clone as it
+#     starts (a clone also creates its target) and then sleeps, so the signal
+#     lands while the tool waits on it.
+mkdir -p "$WORK/slowbin"
+{
+    echo '#!/usr/bin/env bash'
+    printf 'log=%q\nreal_git=%q\n' "$WORK/slow-calls.log" "$REAL_GIT"
+    cat <<'STUB'
+sub=""; i=1
+while [ "$i" -le "$#" ]; do
+    case "${!i}" in
+        -C|-c|--git-dir|--work-tree|--namespace) i=$((i + 2)) ;;
+        -*) i=$((i + 1)) ;;
+        *) sub="${!i}"; break ;;
+    esac
+done
+case "$sub" in
+    push) echo "push $PWD" >> "$log"; sleep 2; exit 0 ;;
+    clone) dest="${!#}"; mkdir -p "$dest"; echo "clone $dest" >> "$log"; sleep 2; exit 0 ;;
+esac
+exec "$real_git" "$@"
+STUB
+} > "$WORK/slowbin/git"
+chmod +x "$WORK/slowbin/git"
+
+# Start a tool in the background from a fresh working directory and sandbox
+# HOME, send it SIG as soon as the slow stub logs its first network call, and
+# return the tool's exit status. Job control (set -m) keeps the background job
+# from inheriting an ignored SIGINT, which a script could not then trap.
+interrupted() {
+    local sig="$1"; shift
+    rm -rf "${WORK:?}/cwd" "${WORK:?}/home"; mkdir -p "$WORK/cwd" "$WORK/home"
+    : > "$WORK/slow-calls.log"
+    (
+        set -m
+        cd "$WORK/cwd" || exit 99
+        HOME="$WORK/home" PATH="$WORK/slowbin:$WORK/bin:$PATH" GIT_CONFIG_GLOBAL=/dev/null \
+            "$@" </dev/null >"$WORK/out.txt" 2>&1 &
+        pid=$!
+        for _ in $(seq 100); do [ -s "$WORK/slow-calls.log" ] && break; sleep 0.1; done
+        kill -"$sig" "$pid"
+        wait "$pid"
+    )
+}
+
+for spec in INT:130 TERM:143; do
+    sig="${spec%%:*}"; want="${spec#*:}"
+
+    rm -rf "$WORK/stash-sig"
+    dirty_repo "$WORK/stash-sig/r1" "$WORK/remotes/sig-r1.git"
+    dirty_repo "$WORK/stash-sig/r2" "$WORK/remotes/sig-r2.git"
+    rc=0; interrupted "$sig" bash "$REPO/STASHME/stashme.sh" -d "$WORK/stash-sig" -b stashme/sig || rc=$?
+    pushes="$(grep -c '^push ' "$WORK/slow-calls.log" || true)"
+    if [ "$rc" -ne "$want" ]; then fail "stashme.sh after SIG$sig exited $rc, not $want: $(tail -3 "$WORK/out.txt" | tr '\n' ' ')"
+    elif [ "$pushes" -ne 1 ]; then fail "stashme.sh kept going after SIG$sig: $pushes pushes started"
+    else pass "stashme.sh stops on SIG$sig with exit $want after the first push"; fi
+
+    rc=0; interrupted "$sig" bash "$REPO/FORKME/forkme.sh" --no-fork --strategy bundle owner/repo || rc=$?
+    temps="$(find "$WORK/cwd" -name '*_temp' | sed "s#$WORK/cwd#.#" | tr '\n' ' ')"
+    if ! grep -q '^clone ' "$WORK/slow-calls.log"; then fail "forkme.sh --strategy bundle never reached its clone: $(tail -3 "$WORK/out.txt" | tr '\n' ' ')"
+    elif [ "$rc" -ne "$want" ]; then fail "forkme.sh after SIG$sig exited $rc, not $want: $(tail -3 "$WORK/out.txt" | tr '\n' ' ')"
+    elif [ -n "$temps" ]; then fail "forkme.sh left its temporary clone after SIG$sig: $temps"
+    else pass "forkme.sh stops on SIG$sig with exit $want and removes its _temp clone"; fi
+done
 
 exit "$FAILED"
