@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/bamr87/scripts/compare/v0.3.0...v0.3.1) (2026-11-22)
+
+
+### Fixed
+
+* **forkme,stashme:** exit 130/143 on Ctrl-C and SIGTERM ([#63](https://github.com/bamr87/scripts/issues/63)) ([f835bef](https://github.com/bamr87/scripts/commit/f835befd55c235f79497c1930a25448d912d2ceb))
+
 ## [0.3.0](https://github.com/bamr87/scripts/compare/v0.2.1...v0.3.0) (2026-11-18)
 
 
