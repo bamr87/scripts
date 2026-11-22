@@ -28,7 +28,12 @@ cleanup() {
         cd "$ORIGINAL_DIR" 2>/dev/null || true
     fi
 }
-trap cleanup EXIT INT TERM
+# cleanup runs once, from EXIT. A signal exits with 128+signo, which fires
+# the EXIT trap; a signal trap that only ran cleanup would return and let the
+# script carry on with the next step.
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 # Color codes for output
 if [[ -t 1 ]]; then
