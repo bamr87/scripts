@@ -235,6 +235,7 @@ ${YELLOW}EXIT CODES:${NC}
     2 - Invalid arguments
     3 - No git repos found
     4 - All repos failed
+    130 - Interrupted (Ctrl-C); 143 - Terminated (SIGTERM)
 
 ${YELLOW}NOTES:${NC}
     - Only processes repos with a configured remote (origin)
@@ -742,6 +743,17 @@ parse_arguments() {
     local custom_branch=""
     
     while [[ $# -gt 0 ]]; do
+        # A value-taking option as the last argument would otherwise die on
+        # `set -u` ("$2: unbound variable", exit 1) instead of exit 2.
+        case "$1" in
+            -d|--dir|--max-depth|-b|--branch|--prefix|--suffix|-m|--message|--summary)
+                if [[ $# -lt 2 ]]; then
+                    log_error "Option $1 requires a value"
+                    echo "Use --help for usage information"
+                    exit 2
+                fi
+                ;;
+        esac
         case "$1" in
             -h|--help)
                 show_usage
@@ -760,7 +772,7 @@ parse_arguments() {
                 # It becomes a `find -maxdepth` operand: digits only.
                 if [[ ! "$MAX_DEPTH" =~ ^[0-9]+$ ]]; then
                     log_error "Invalid --max-depth '$MAX_DEPTH': expected a non-negative integer"
-                    exit 1
+                    exit 2
                 fi
                 shift 2
                 ;;
