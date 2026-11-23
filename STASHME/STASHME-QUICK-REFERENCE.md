@@ -107,9 +107,11 @@ stashme.sh --dry-run --verbose
 |------|---------|
 | `0` | Success |
 | `1` | Partial success (some failed) |
-| `2` | Invalid arguments |
+| `2` | Invalid arguments (unknown option, missing option value, bad `--max-depth`) or missing dependency |
 | `3` | No repos found |
 | `4` | All repos failed |
+| `130` | Interrupted (Ctrl-C) |
+| `143` | Terminated (SIGTERM) |
 
 ## Tips
 

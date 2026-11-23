@@ -559,8 +559,12 @@ mkdir -p "$WORK/stash-empty"
 rc=0; sandboxed "$WORK/home" bash "$REPO/STASHME/stashme.sh" --dry-run -d "$WORK/stash-empty" \
     --max-depth '1 -exec touch '"$SANDBOX"'/PWNED \;' || rc=$?
 if [ -e "$SANDBOX/PWNED" ]; then fail "stashme --max-depth injected a find primary"
-elif [ "$rc" -ne 0 ] && grep -q "Invalid --max-depth" "$WORK/out.txt"; then pass "stashme rejects a non-integer --max-depth"
-else fail "stashme accepted a crafted --max-depth (exit $rc): $(tail -2 "$WORK/out.txt")"; fi
+elif [ "$rc" -eq 2 ] && grep -q "Invalid --max-depth" "$WORK/out.txt"; then pass "stashme rejects a non-integer --max-depth with exit 2"
+else fail "stashme accepted a crafted --max-depth or did not exit 2 (exit $rc): $(tail -2 "$WORK/out.txt")"; fi
+
+rc=0; sandboxed "$WORK/home" bash "$REPO/STASHME/stashme.sh" --dry-run -d "$WORK/stash-empty" -m || rc=$?
+if [ "$rc" -eq 2 ] && grep -q "Option -m requires a value" "$WORK/out.txt"; then pass "stashme rejects a value-taking option with no value with exit 2"
+else fail "stashme with a trailing -m (exit $rc, want 2): $(tail -2 "$WORK/out.txt")"; fi
 
 rc=0; sandboxed "$WORK/home" env GITHUB_USER=smoke bash "$REPO/git_init.sh" --headless -n "it's-a-test" --dry-run || rc=$?
 expected="DRYRUN: mkdir -p $(printf '%q' "$WORK/home/github/it's-a-test")"
